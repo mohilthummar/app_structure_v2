@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-/// AppStyle provides responsive spacing and sizing utilities for the TredPlus application
+/// AppStyle provides responsive spacing and sizing utilities for the Flutter application
 ///
 /// This class contains predefined spacing values that automatically adapt to different
 /// screen sizes using flutter_screenutil. All values are responsive and will scale
@@ -52,7 +52,6 @@ double get defaultTopPadding => ScreenUtil().statusBarHeight + defaultPadding;
 /// or other bottom UI elements. Ensures content is not obscured by system UI.
 double get defaultBottomPadding => ScreenUtil().bottomBarHeight == 0.0 ? defaultPadding : (ScreenUtil().bottomBarHeight + 6.h);
 
-
 /// Border radius utilities for common component patterns
 class AppRadius {
   /// Default border radius for most components
@@ -66,13 +65,13 @@ class AppRadius {
 
   /// Top-only border radius for bottom sheets and modals
   static BorderRadius get topOnly => BorderRadius.vertical(
-        top: Radius.circular(defaultLargeRadius),
-      );
+    top: Radius.circular(defaultLargeRadius),
+  );
 
   /// Bottom-only border radius for top sheets and modals
   static BorderRadius get bottomOnly => BorderRadius.vertical(
-        bottom: Radius.circular(defaultLargeRadius),
-      );
+    bottom: Radius.circular(defaultLargeRadius),
+  );
 }
 
 /// Edge insets utilities for common padding patterns
@@ -97,5 +96,4 @@ class AppEdgeInsets {
 
   /// Right padding only
   static EdgeInsets get right => EdgeInsets.only(right: defaultPadding);
-
 }

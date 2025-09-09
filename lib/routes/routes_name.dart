@@ -1,7 +1,7 @@
 // -----------------------------------------------------------------------------
-// TredPlus App Route Names
+// Flutter App Route Names
 // -----------------------------------------------------------------------------
-// This file defines all route name constants for the TredPlus application.
+// This file defines all route name constants for the Flutter application.
 // Use these static strings throughout the app to avoid typos and ensure
 // consistency in navigation.
 //
@@ -13,7 +13,7 @@
 // your route configuration and navigation calls.
 // -----------------------------------------------------------------------------
 
-/// All route name constants for the TredPlus app, organized by flow/feature.
+/// All route name constants for the Flutter app, organized by flow/feature.
 class RoutesName {
   // ---------------------- Auth Flow Routes ----------------------
   static String splashView = '/';

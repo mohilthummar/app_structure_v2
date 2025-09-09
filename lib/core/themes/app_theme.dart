@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../data/constants/app_colors.dart';
 
-/// AppTheme class provides comprehensive theming for the TredPlus application
+/// AppTheme class provides comprehensive theming for the Flutter application
 ///
 /// This class manages both light and dark themes with consistent styling across
 /// the application. It includes typography, colors, component themes, and

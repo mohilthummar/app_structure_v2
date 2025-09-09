@@ -1,7 +1,7 @@
 // -----------------------------------------------------------------------------
-// TredPlus App Routing Configuration
+// Flutter App Routing Configuration
 // -----------------------------------------------------------------------------
-// This file defines all the routes for the TredPlus application using GetX.
+// This file defines all the routes for the Flutter application using GetX.
 // It organizes the navigation structure for all flows (auth, profile, deals, etc.)
 // and provides a single source of truth for route management.
 //
