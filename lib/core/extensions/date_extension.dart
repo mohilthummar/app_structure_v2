@@ -1,6 +1,6 @@
 import 'package:intl/intl.dart';
 
-import '../utils/utils.dart';
+import '../utils/ui_utils.dart';
 
 /// Extension on DateTime to provide convenient date formatting and manipulation methods
 /// Offers various date formatting options and utility functions for date calculations
@@ -53,7 +53,7 @@ extension DateExtension on DateTime {
   /// Returns a string like "15/01/2024"
   /// Uses the Utils.changeDateFormat method for consistent formatting
   String formatDate() {
-    return DateUtils.changeDateFormat(date: this, outputFormat: 'dd/MM/yyyy');
+    return UiUtils.changeDateFormat(date: this, outputFormat: 'dd/MM/yyyy');
   }
 
   /// Formats the date to show month and year
@@ -61,7 +61,7 @@ extension DateExtension on DateTime {
   /// Returns a string like "January 2024"
   /// Uses the Utils.changeDateFormat method for consistent formatting
   String formatMonth() {
-    return DateUtils.changeDateFormat(date: this, outputFormat: 'MMMM yyyy');
+    return UiUtils.changeDateFormat(date: this, outputFormat: 'MMMM yyyy');
   }
 
   /// Converts the date to Indian Standard Time (IST) format
@@ -155,21 +155,5 @@ extension DateExtension on DateTime {
   /// Returns true if the date is Saturday or Sunday, false otherwise
   bool get isWeekend {
     return weekday == DateTime.saturday || weekday == DateTime.sunday;
-  }
-
-  /// Gets the day name in short format
-  ///
-  /// Returns strings like "Mon", "Tue", "Wed", etc.
-  String get shortDayName {
-    const List<String> dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-    return dayNames[weekday - 1];
-  }
-
-  /// Gets the month name in short format
-  ///
-  /// Returns strings like "Jan", "Feb", "Mar", etc.
-  String get shortMonthName {
-    const List<String> monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return monthNames[month - 1];
   }
 }

@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:app_structure/core/utils/utils.dart';
+import 'package:app_structure/core/utils/ui_utils.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-import '../utils/color_print.dart';
+import '../utils/utils.dart';
 
 /// Global instance for local notifications
 FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
@@ -52,7 +52,7 @@ class NotificationService {
       FirebaseMessaging.instance.getToken().then((token) {
         printData(type: "FCM Token ------------>>> ", text: token);
         deviceToken = token ?? "";
-        DeviceUtils.initPlatformState(deviceToken);
+        UiUtils.initPlatformState(deviceToken);
       });
     });
 

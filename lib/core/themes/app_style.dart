@@ -22,30 +22,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 /// It provides comfortable spacing that works well across different screen sizes.
 double get defaultPadding => 14.h;
 
-/// Small padding for compact layouts (10.h)
-///
-/// Used when you need tighter spacing, such as in lists, compact cards,
-/// or when space is limited.
-double get defaultSmallPadding => 10.h;
-
-/// Extra small padding for very compact layouts (6.h)
-///
-/// Used for minimal spacing requirements, such as between closely related elements
-/// or in dense information displays.
-double get defaultExtraSmallPadding => 6.h;
-
-/// Large padding for spacious layouts (20.h)
-///
-/// Used for main content areas, section headers, or when you want to create
-/// more breathing room around content.
-double get defaultLargePadding => 20.h;
-
-/// Extra large padding for very spacious layouts (32.h)
-///
-/// Used for main page content, hero sections, or when you want maximum
-/// visual separation between major sections.
-double get defaultExtraLargePadding => 32.h;
-
 /// Default border radius used throughout the app (10.r)
 ///
 /// This is the standard border radius used for cards, buttons, input fields,
@@ -64,12 +40,6 @@ double get defaultSmallRadius => 6.r;
 /// rounded appearance.
 double get defaultLargeRadius => 16.r;
 
-/// Extra large border radius for very prominent rounding (24.r)
-///
-/// Used for hero sections, large containers, or when you want maximum
-/// rounded appearance.
-double get defaultExtraLargeRadius => 24.r;
-
 /// Top padding that accounts for status bar height
 ///
 /// This automatically adjusts for different devices and their status bar heights.
@@ -82,38 +52,6 @@ double get defaultTopPadding => ScreenUtil().statusBarHeight + defaultPadding;
 /// or other bottom UI elements. Ensures content is not obscured by system UI.
 double get defaultBottomPadding => ScreenUtil().bottomBarHeight == 0.0 ? defaultPadding : (ScreenUtil().bottomBarHeight + 6.h);
 
-/// Horizontal padding for content that needs side margins
-///
-/// Provides consistent horizontal spacing for content that should have
-/// left and right margins.
-double get defaultHorizontalPadding => defaultPadding;
-
-/// Vertical padding for content that needs top and bottom margins
-///
-/// Provides consistent vertical spacing for content that should have
-/// top and bottom margins.
-double get defaultVerticalPadding => defaultPadding;
-
-/// Spacing utilities for common layout patterns
-class AppSpacing {
-  /// Creates a SizedBox with default padding height
-  static Widget get verticalSpace => SizedBox(height: defaultPadding);
-
-  /// Creates a SizedBox with small padding height
-  static Widget get verticalSmallSpace => SizedBox(height: defaultSmallPadding);
-
-  /// Creates a SizedBox with large padding height
-  static Widget get verticalLargeSpace => SizedBox(height: defaultLargePadding);
-
-  /// Creates a SizedBox with default padding width
-  static Widget get horizontalSpace => SizedBox(width: defaultPadding);
-
-  /// Creates a SizedBox with small padding width
-  static Widget get horizontalSmallSpace => SizedBox(width: defaultSmallPadding);
-
-  /// Creates a SizedBox with large padding width
-  static Widget get horizontalLargeSpace => SizedBox(width: defaultLargePadding);
-}
 
 /// Border radius utilities for common component patterns
 class AppRadius {
@@ -125,9 +63,6 @@ class AppRadius {
 
   /// Large border radius for prominent components
   static BorderRadius get large => BorderRadius.circular(defaultLargeRadius);
-
-  /// Extra large border radius for very prominent components
-  static BorderRadius get extraLarge => BorderRadius.circular(defaultExtraLargeRadius);
 
   /// Top-only border radius for bottom sheets and modals
   static BorderRadius get topOnly => BorderRadius.vertical(
@@ -145,29 +80,11 @@ class AppEdgeInsets {
   /// Default padding for all sides
   static EdgeInsets get all => EdgeInsets.all(defaultPadding);
 
-  /// Small padding for all sides
-  static EdgeInsets get allSmall => EdgeInsets.all(defaultSmallPadding);
-
-  /// Large padding for all sides
-  static EdgeInsets get allLarge => EdgeInsets.all(defaultLargePadding);
-
   /// Horizontal padding only
   static EdgeInsets get horizontal => EdgeInsets.symmetric(horizontal: defaultPadding);
 
   /// Vertical padding only
   static EdgeInsets get vertical => EdgeInsets.symmetric(vertical: defaultPadding);
-
-  /// Small horizontal padding only
-  static EdgeInsets get horizontalSmall => EdgeInsets.symmetric(horizontal: defaultSmallPadding);
-
-  /// Small vertical padding only
-  static EdgeInsets get verticalSmall => EdgeInsets.symmetric(vertical: defaultSmallPadding);
-
-  /// Large horizontal padding only
-  static EdgeInsets get horizontalLarge => EdgeInsets.symmetric(horizontal: defaultLargePadding);
-
-  /// Large vertical padding only
-  static EdgeInsets get verticalLarge => EdgeInsets.symmetric(vertical: defaultLargePadding);
 
   /// Top padding only
   static EdgeInsets get top => EdgeInsets.only(top: defaultPadding);
@@ -181,15 +98,4 @@ class AppEdgeInsets {
   /// Right padding only
   static EdgeInsets get right => EdgeInsets.only(right: defaultPadding);
 
-  /// Top and bottom padding
-  static EdgeInsets get topBottom => EdgeInsets.only(
-        top: defaultPadding,
-        bottom: defaultPadding,
-      );
-
-  /// Left and right padding
-  static EdgeInsets get leftRight => EdgeInsets.only(
-        left: defaultPadding,
-        right: defaultPadding,
-      );
 }

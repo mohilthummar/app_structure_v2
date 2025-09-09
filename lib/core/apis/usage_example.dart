@@ -14,33 +14,70 @@ class ExampleApiService extends ClientService {
 
   /// Example: Update user profile
   /// Demonstrates a POST request with data
-  Future<Result<BaseResponse<dynamic>, String>> updateUserProfile({required String name, required String email, String? phone}) async {
-    final data = {'name': name, 'email': email, if (phone != null) 'phone': phone};
+  Future<Result<BaseResponse<dynamic>, String>> updateUserProfile({
+    required String name,
+    required String email,
+    String? phone,
+  }) async {
+    final data = {
+      'name': name,
+      'email': email,
+      if (phone != null) 'phone': phone,
+    };
 
-    return await request(requestType: RequestType.post, path: '/api/user/profile', data: data);
+    return await request(
+      requestType: RequestType.post,
+      path: '/api/user/profile',
+      data: data,
+    );
   }
 
   /// Example: Delete user account
   /// Demonstrates a DELETE request
   Future<Result<BaseResponse<dynamic>, String>> deleteAccount() async {
-    return await request(requestType: RequestType.delete, path: '/api/user/account');
+    return await request(
+      requestType: RequestType.delete,
+      path: '/api/user/account',
+    );
   }
 
   /// Example: Get paginated list of items
   /// Demonstrates a GET request with query parameters
-  Future<Result<BaseResponse<dynamic>, String>> getItems({int page = 1, int perPage = 10, String? search}) async {
-    final queryParams = <String, dynamic>{'page': page, 'per_page': perPage, if (search != null && search.isNotEmpty) 'search': search};
+  Future<Result<BaseResponse<dynamic>, String>> getItems({
+    int page = 1,
+    int perPage = 10,
+    String? search,
+  }) async {
+    final queryParams = <String, dynamic>{
+      'page': page,
+      'per_page': perPage,
+      if (search != null && search.isNotEmpty) 'search': search,
+    };
 
-    return await request(requestType: RequestType.get, path: '/api/items', queryParameters: queryParams);
+    return await request(
+      requestType: RequestType.get,
+      path: '/api/items',
+      queryParameters: queryParams,
+    );
   }
 
   /// Example: Upload file
   /// Demonstrates a POST request with file data
-  Future<Result<BaseResponse<dynamic>, String>> uploadFile({required String filePath, required String fileName}) async {
+  Future<Result<BaseResponse<dynamic>, String>> uploadFile({
+    required String filePath,
+    required String fileName,
+  }) async {
     // In a real implementation, you would use FormData for file uploads
-    final data = {'file': filePath, 'filename': fileName};
+    final data = {
+      'file': filePath,
+      'filename': fileName,
+    };
 
-    return await request(requestType: RequestType.post, path: '/api/upload', data: data);
+    return await request(
+      requestType: RequestType.post,
+      path: '/api/upload',
+      data: data,
+    );
   }
 }
 
@@ -143,14 +180,29 @@ class UserProfile {
   final String email;
   final String? phone;
 
-  UserProfile({required this.id, required this.name, required this.email, this.phone});
+  UserProfile({
+    required this.id,
+    required this.name,
+    required this.email,
+    this.phone,
+  });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
-    return UserProfile(id: json['id'], name: json['name'], email: json['email'], phone: json['phone']);
+    return UserProfile(
+      id: json['id'],
+      name: json['name'],
+      email: json['email'],
+      phone: json['phone'],
+    );
   }
 
   Map<String, dynamic> toJson() {
-    return {'id': id, 'name': name, 'email': email, if (phone != null) 'phone': phone};
+    return {
+      'id': id,
+      'name': name,
+      'email': email,
+      if (phone != null) 'phone': phone,
+    };
   }
 }
 

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
-import 'core/controller/base_view_model.dart';
+import 'core/controller/base_view_controller.dart';
 import 'core/services/deep_linking_manager.dart';
 import 'core/themes/app_theme.dart';
 import 'core/utils/stretch_scroll_behavior.dart';
@@ -53,7 +53,7 @@ class MyApp extends StatelessWidget {
 class LazyBinding implements Bindings {
   @override
   void dependencies() {
-    Get.put(BaseViewModel(), permanent: true);
+    Get.put(BaseViewController(), permanent: true);
     Get.put(DeepLinkManager(), permanent: true);
 
     /* if (kDebugMode || LocalStorage.isInternalTester) {

@@ -9,7 +9,15 @@ class BottomBorderContainer extends StatelessWidget {
   final EdgeInsets? margin;
   final AlignmentGeometry? alignment;
 
-  const BottomBorderContainer({super.key, required this.isSelected, required this.child, required this.color, this.padding, this.margin, this.alignment});
+  const BottomBorderContainer({
+    super.key,
+    required this.isSelected,
+    required this.child,
+    required this.color,
+    this.padding,
+    this.margin,
+    this.alignment,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +30,16 @@ class BottomBorderContainer extends StatelessWidget {
         color: Colors.white,
         border: Border.all(color: color),
         borderRadius: BorderRadius.circular(defaultRadius),
-        boxShadow: isSelected ? [BoxShadow(offset: const Offset(0, 4), blurRadius: 0, spreadRadius: 0, color: color)] : [],
+        boxShadow: isSelected
+            ? [
+                BoxShadow(
+                  offset: const Offset(0, 4),
+                  blurRadius: 0,
+                  spreadRadius: 0,
+                  color: color,
+                ),
+              ]
+            : [],
       ),
       child: child,
     );

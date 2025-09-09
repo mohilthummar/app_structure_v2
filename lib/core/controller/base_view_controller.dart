@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-class BaseViewModel extends GetxController with WidgetsBindingObserver {
+class BaseViewController extends GetxController with WidgetsBindingObserver {
   // late PackageInfo packageInfo;
 
   @override

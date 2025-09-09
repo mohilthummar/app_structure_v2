@@ -163,7 +163,7 @@ class _AppTextFieldState extends State<AppTextField> {
         Theme.of(context).textTheme.bodyMedium?.copyWith(
           fontSize: 12.sp,
           color: AppColors.lightGreyTextColor,
-          fontWeight: FontWeight.w400, //
+          fontWeight: FontWeight.w400,
         );
 
     // Text Style
@@ -172,7 +172,7 @@ class _AppTextFieldState extends State<AppTextField> {
         Theme.of(context).textTheme.bodyMedium?.copyWith(
           fontSize: 12.sp,
           color: AppColors.primaryTextColor,
-          fontWeight: FontWeight.w400, //
+          fontWeight: FontWeight.w400,
         );
 
     // Color
@@ -197,7 +197,7 @@ class _AppTextFieldState extends State<AppTextField> {
         if (widget.label != null) ...[
           AppText(
             widget.label!,
-            textColor: _hasFocus ? AppColors.primaryTextColor : AppColors.darkGreyTextColor, //
+            textColor: _hasFocus ? AppColors.primaryTextColor : AppColors.darkGreyTextColor,
           ),
           4.verticalSpace,
         ],
@@ -228,7 +228,7 @@ class _AppTextFieldState extends State<AppTextField> {
               isDense: true,
               counter: const SizedBox.shrink(),
               prefixIcon: prefixIcon,
-              suffixIcon: suffixIcon, //
+              suffixIcon: suffixIcon,
             ),
             textInputAction: widget.textInputAction,
             inputFormatters: widget.inputFormatters,
@@ -255,7 +255,10 @@ class _AppTextFieldState extends State<AppTextField> {
       if (icon.endsWith('.svg')) {
         child = Padding(
           padding: EdgeInsets.symmetric(horizontal: 12.w),
-          child: SvgPicture.asset(icon, colorFilter: ColorFilter.mode(color, BlendMode.srcIn)),
+          child: SvgPicture.asset(
+            icon,
+            colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
+          ),
         );
       } else {
         child = Padding(

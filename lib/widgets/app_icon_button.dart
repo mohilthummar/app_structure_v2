@@ -30,7 +30,7 @@ class AppIconButton extends StatelessWidget {
                 icon,
                 height: iconSize ?? 22.h,
                 width: iconSize ?? 22.h,
-                colorFilter: ColorFilter.mode(iconColor ?? AppColors.primaryColor, BlendMode.srcIn), //
+                colorFilter: ColorFilter.mode(iconColor ?? AppColors.primaryColor, BlendMode.srcIn), 
               ),
       ),
     );

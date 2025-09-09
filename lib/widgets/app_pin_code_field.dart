@@ -29,7 +29,7 @@ class AppPinCodeField extends StatelessWidget {
     this.mainAxisAlignment,
     this.validator,
     this.onChanged,
-    this.onCompleted, //
+    this.onCompleted,
   });
 
   @override
@@ -89,7 +89,14 @@ class AppPinCodeField extends StatelessWidget {
             selectedFillColor: AppColors.backgroundColor,
 
             /// Box shadow
-            activeBoxShadow: [const BoxShadow(offset: Offset(0, 4), blurRadius: 0, spreadRadius: 0, color: AppColors.primaryColor)],
+            activeBoxShadow: [
+              const BoxShadow(
+                offset: Offset(0, 4),
+                blurRadius: 0,
+                spreadRadius: 0,
+                color: AppColors.primaryColor,
+              ),
+            ],
           ),
 
           /// OnChanged, Validators, and OnComplete getter

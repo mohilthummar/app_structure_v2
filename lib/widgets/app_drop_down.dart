@@ -72,7 +72,7 @@ class AppDropDown extends StatelessWidget {
             dropdownStyleData: DropdownStyleData(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(defaultRadius),
-                color: AppColors.containerFillColor, //
+                color: AppColors.containerFillColor,
               ),
               padding: EdgeInsets.zero,
             ),
@@ -81,7 +81,7 @@ class AppDropDown extends StatelessWidget {
               style: Theme.of(context).textTheme.bodyMedium!.copyWith(
                 fontSize: 14,
                 color: hintTextColor ?? AppColors.darkGreyTextColor,
-                fontWeight: FontWeight.w500, //
+                fontWeight: FontWeight.w500,
               ),
             ),
             items: items
@@ -96,7 +96,7 @@ class AppDropDown extends StatelessWidget {
             style: Theme.of(context).textTheme.bodyMedium!.copyWith(fontSize: 14, color: AppColors.black, fontWeight: FontWeight.w500),
             iconStyleData: IconStyleData(
               icon: isLoading ? const CircularLoader() : const Icon(Icons.keyboard_arrow_down, color: AppColors.darkGreyTextColor),
-              iconSize: 24, //
+              iconSize: 24,
             ),
             menuItemStyleData: const MenuItemStyleData(padding: EdgeInsets.symmetric(horizontal: 10)),
             decoration: InputDecoration(
@@ -106,7 +106,7 @@ class AppDropDown extends StatelessWidget {
               errorStyle: Theme.of(context).textTheme.bodyMedium!.copyWith(
                 fontSize: 14,
                 color: AppColors.darkGreyTextColor,
-                fontWeight: FontWeight.w400, //
+                fontWeight: FontWeight.w400,
               ),
               prefixIcon: prefixIcon == null ? null : Padding(padding: const EdgeInsets.only(right: 0, left: 16), child: SvgPicture.asset(prefixIcon!)),
               prefixIconConstraints: prefixIcon == null ? null : BoxConstraints.tight(const Size(40, 48)),
@@ -116,7 +116,7 @@ class AppDropDown extends StatelessWidget {
                 borderSide: BorderSide(color: Theme.of(context).primaryColor, width: 1),
               ),
               enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(defaultRadius)), 
+                borderRadius: BorderRadius.all(Radius.circular(defaultRadius)),
                 borderSide: const BorderSide(color: AppColors.dividerAndBorderColor, width: 1),
               ),
               focusedBorder: OutlineInputBorder(

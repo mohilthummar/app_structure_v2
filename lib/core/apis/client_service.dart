@@ -35,7 +35,12 @@ abstract class ClientService {
   /// [queryParameters] - Query parameters for the request
   ///
   /// Returns a [Result] containing either a successful [BaseResponse] or an error message
-  Future<Result<BaseResponse<dynamic>, String>> request({required RequestType requestType, required String path, dynamic data, Map<String, dynamic>? queryParameters}) async {
+  Future<Result<BaseResponse<dynamic>, String>> request({
+    required RequestType requestType,
+    required String path,
+    dynamic data,
+    Map<String, dynamic>? queryParameters,
+  }) async {
     // Configure Dio with base settings
     _configureDio();
 
@@ -79,7 +84,7 @@ abstract class ClientService {
       sendTimeout: const Duration(seconds: 6),
       connectTimeout: const Duration(seconds: 6),
       receiveTimeout: const Duration(seconds: 6),
-      //
+      responseType: ResponseType.json,
     );
   }
 
@@ -96,7 +101,6 @@ abstract class ClientService {
           responseHeader: true,
           responseBody: true,
           error: true,
-          //
         ),
     ]);
   }

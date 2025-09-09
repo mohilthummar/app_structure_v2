@@ -2,11 +2,12 @@ import 'dart:ui';
 
 import 'package:app_structure/core/themes/app_style.dart';
 import 'package:app_structure/core/themes/app_text.dart';
-import 'package:app_structure/core/utils/utils.dart';
 import 'package:app_structure/data/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
+
+import 'ui_utils.dart';
 
 /// A bottom sheet for picking an image from gallery or camera.
 /// Returns an [XFile] or null.
@@ -39,7 +40,7 @@ class ImageSourceSheet extends StatelessWidget {
                   icon: Icons.image_rounded,
                   title: 'Gallery',
                   onTap: () async {
-                    XFile? file = await FileUtils.pickImage(ImageSource.gallery);
+                    XFile? file = await UiUtils.pickImage(ImageSource.gallery);
                     Get.back(result: file);
                   },
                 ),
@@ -47,7 +48,7 @@ class ImageSourceSheet extends StatelessWidget {
                   icon: Icons.camera_alt_rounded,
                   title: 'Camera',
                   onTap: () async {
-                    XFile? file = await FileUtils.pickImage(ImageSource.camera);
+                    XFile? file = await UiUtils.pickImage(ImageSource.camera);
                     Get.back(result: file);
                   },
                 ),

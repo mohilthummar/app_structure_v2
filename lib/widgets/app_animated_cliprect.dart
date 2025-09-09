@@ -42,12 +42,20 @@ class AnimatedClipRectState extends State<AnimatedClipRect> with TickerProviderS
 
   @override
   void initState() {
-    _animationController = AnimationController(duration: widget.duration, reverseDuration: widget.reverseDuration ?? widget.duration, vsync: this, value: widget.open ? 1.0 : 0.0, animationBehavior: widget.animationBehavior);
-    _animation = Tween(begin: 0.0, end: 1.0).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: widget.curve,
-      reverseCurve: widget.reverseCurve ?? widget.curve,
-    ));
+    _animationController = AnimationController(
+      vsync: this,
+      duration: widget.duration,
+      value: widget.open ? 1.0 : 0.0,
+      animationBehavior: widget.animationBehavior,
+      reverseDuration: widget.reverseDuration ?? widget.duration,
+    );
+    _animation = Tween(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: widget.curve,
+        reverseCurve: widget.reverseCurve ?? widget.curve,
+      ),
+    );
     super.initState();
   }
 

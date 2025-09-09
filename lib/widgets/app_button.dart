@@ -279,7 +279,18 @@ class _AppButtonState extends State<AppButton> {
     if (widget.gradient) {
       button = Ink(
         decoration: BoxDecoration(
-          gradient: widget.customGradient ?? LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: <Color>[AppColors.primaryColor.withAlpha(20), AppColors.primaryColor, AppColors.primaryColor, AppColors.primaryColor.withAlpha(20)]),
+          gradient:
+              widget.customGradient ??
+              LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: <Color>[
+                  AppColors.primaryColor.withAlpha(20),
+                  AppColors.primaryColor,
+                  AppColors.primaryColor,
+                  AppColors.primaryColor.withAlpha(20),
+                ],
+              ),
           borderRadius: widget.borderRadius ?? BorderRadius.circular(defaultRadius),
         ),
         child: button,
@@ -311,7 +322,12 @@ class _AppButtonState extends State<AppButton> {
       builder: (context, scale, child) {
         return Transform.scale(
           scale: scale,
-          child: GestureDetector(onTapDown: isDisabled ? null : (_) => _handleHighlightChanged(true), onTapUp: isDisabled ? null : (_) => _handleHighlightChanged(false), onTapCancel: isDisabled ? null : () => _handleHighlightChanged(false), child: child),
+          child: GestureDetector(
+            onTapDown: isDisabled ? null : (_) => _handleHighlightChanged(true),
+            onTapUp: isDisabled ? null : (_) => _handleHighlightChanged(false),
+            onTapCancel: isDisabled ? null : () => _handleHighlightChanged(false),
+            child: child,
+          ),
         );
       },
       child: button,
@@ -328,7 +344,7 @@ class _AppButtonState extends State<AppButton> {
         Icon(
           widget.icon,
           color: widget.color ?? AppColors.whiteTextColor,
-          size: 24, //
+          size: 24,
         ),
       );
 
@@ -355,7 +371,7 @@ class _AppButtonState extends State<AppButton> {
             textSize: TextSize.large_16,
             textWeight: TextWeight.w500,
             textColor: widget.color ?? AppColors.whiteTextColor,
-            overflow: TextOverflow.ellipsis, //
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       );
@@ -372,7 +388,7 @@ class _AppButtonState extends State<AppButton> {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.center,
       mainAxisSize: MainAxisSize.min,
-      children: rowChildren, //
+      children: rowChildren,
     );
   }
 
@@ -384,14 +400,14 @@ class _AppButtonState extends State<AppButton> {
         widget.image!,
         height: widget.imageSize ?? 22,
         colorFilter: widget.imageColor != null ? ColorFilter.mode(widget.imageColor!, BlendMode.srcIn) : null,
-        alignment: Alignment.bottomLeft, //
+        alignment: Alignment.bottomLeft,
       );
     } else {
       return Image.asset(
         widget.image!,
         height: widget.imageSize ?? 22,
         color: widget.imageColor,
-        alignment: Alignment.bottomLeft, //
+        alignment: Alignment.bottomLeft,
       );
     }
   }

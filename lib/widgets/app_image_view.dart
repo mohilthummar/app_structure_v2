@@ -39,7 +39,30 @@ class AppImageView extends StatelessWidget {
   final VoidCallback? onTap;
   final String? placeholder;
 
-  const AppImageView({super.key, required this.imagePath, this.height, this.width, this.fit, this.imageColor, this.filterQuality, this.blendMode, this.alignment, this.backgroundColor, this.margin, this.padding, this.shape, this.borderRadius, this.border, this.borderColor, this.borderWidth, this.showProgressIndicator = false, this.indicatorSize, this.indicatorStrokeWidth, this.onTap, this.placeholder});
+  const AppImageView({
+    super.key,
+    required this.imagePath,
+    this.height,
+    this.width,
+    this.fit,
+    this.imageColor,
+    this.filterQuality,
+    this.blendMode,
+    this.alignment,
+    this.backgroundColor,
+    this.margin,
+    this.padding,
+    this.shape,
+    this.borderRadius,
+    this.border,
+    this.borderColor,
+    this.borderWidth,
+    this.showProgressIndicator = false,
+    this.indicatorSize,
+    this.indicatorStrokeWidth,
+    this.onTap,
+    this.placeholder,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +78,11 @@ class AppImageView extends StatelessWidget {
           color: backgroundColor ?? AppColors.containerFillColor,
           shape: shape ?? BoxShape.rectangle,
           borderRadius: borderRadius,
-          border: Border.all(color: borderColor ?? Colors.transparent, width: borderWidth ?? 0, strokeAlign: BorderSide.strokeAlignOutside),
+          border: Border.all(
+            color: borderColor ?? Colors.transparent,
+            width: borderWidth ?? 0,
+            strokeAlign: BorderSide.strokeAlignOutside,
+          ),
         ),
         child: buildImageView(),
       ),
@@ -68,12 +95,35 @@ class AppImageView extends StatelessWidget {
         case ImageType.empty:
           return errorWidget();
         case ImageType.svg:
-          return SvgPicture.asset(imagePath!, height: height, width: width, fit: fit ?? BoxFit.cover, colorFilter: ColorFilter.mode(imageColor ?? Colors.transparent, BlendMode.srcIn));
+          return SvgPicture.asset(
+            imagePath!,
+            height: height,
+            width: width,
+            fit: fit ?? BoxFit.cover,
+            colorFilter: ColorFilter.mode(imageColor ?? Colors.transparent, BlendMode.srcIn),
+          );
         case ImageType.file:
-          return Image.file(File(imagePath!), height: height, width: width, fit: fit ?? BoxFit.cover, color: imageColor);
+          return Image.file(
+            File(imagePath!),
+            height: height,
+            width: width,
+            fit: fit ?? BoxFit.cover,
+            color: imageColor,
+          );
         case ImageType.network:
           return kIsWeb
-              ? Image.network(imagePath!, fit: fit, height: height, width: width, color: imageColor, colorBlendMode: blendMode, filterQuality: filterQuality ?? FilterQuality.high, alignment: Alignment.center, loadingBuilder: (context, child, loadingProgress) => loadingProgress == null ? child : placeHolderWidget(), errorBuilder: (context, url, error) => errorWidget())
+              ? Image.network(
+                  imagePath!,
+                  fit: fit,
+                  height: height,
+                  width: width,
+                  color: imageColor,
+                  colorBlendMode: blendMode,
+                  filterQuality: filterQuality ?? FilterQuality.high,
+                  alignment: Alignment.center,
+                  loadingBuilder: (context, child, loadingProgress) => loadingProgress == null ? child : placeHolderWidget(),
+                  errorBuilder: (context, url, error) => errorWidget(),
+                )
               : CachedNetworkImage(
                   imageUrl: imagePath!,
                   height: height,
@@ -90,23 +140,51 @@ class AppImageView extends StatelessWidget {
                   errorWidget: (context, url, error) => errorWidget(),
                 );
         case ImageType.png:
-          return Image.asset(imagePath!, height: height, width: width, fit: fit ?? BoxFit.cover, color: imageColor);
+          return Image.asset(
+            imagePath!,
+            height: height,
+            width: width,
+            fit: fit ?? BoxFit.cover,
+            color: imageColor,
+          );
         case ImageType.memory:
-          return Image.memory(base64Decode(imagePath!.replaceAll('data:image/png;base64,', '')), height: height, width: width, fit: fit ?? BoxFit.cover, color: imageColor);
+          return Image.memory(
+            base64Decode(imagePath!.replaceAll('data:image/png;base64,', '')),
+            height: height,
+            width: width,
+            fit: fit ?? BoxFit.cover,
+            color: imageColor,
+          );
         default:
-          return Image.asset(imagePath!, height: height, width: width, fit: fit ?? BoxFit.cover, color: imageColor);
+          return Image.asset(
+            imagePath!,
+            height: height,
+            width: width,
+            fit: fit ?? BoxFit.cover,
+            color: imageColor,
+          );
       }
     }
     return errorWidget();
   }
 
   Widget errorWidget() {
-    return SvgPicture.asset(placeholder ?? "AppAssets.userPlaceHolder", width: width ?? double.infinity, height: height ?? double.infinity, alignment: Alignment.center, fit: BoxFit.cover);
+    return SvgPicture.asset(
+      placeholder ?? "AppAssets.userPlaceHolder",
+      width: width ?? double.infinity,
+      height: height ?? double.infinity,
+      alignment: Alignment.center,
+      fit: BoxFit.cover,
+    );
   }
 
   Widget placeHolderWidget() {
     return shimmerWrapper(
-      child: shimmerContainer(width: width ?? double.infinity, height: height ?? double.infinity, borderRadius: borderRadius),
+      child: shimmerContainer(
+        width: width ?? double.infinity,
+        height: height ?? double.infinity,
+        borderRadius: borderRadius,
+      ),
     );
   }
 
