@@ -1,0 +1,463 @@
+---
+globs: *form*.dart,*validation*.dart,*input*.dart
+description: Form validation and input handling patterns
+---
+
+# Form Validation and Input Handling
+
+## Validation Mixin
+
+### Using ValidationMixin
+All controllers that handle forms should use the [ValidationMixin](mdc:lib/core/utils/validation_mixin.dart):
+
+```dart
+class SignInController extends BaseViewController with ValidationMixin {
+  GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+  
+  // Use mixin validators
+  String? emailValidator(String? value) => emailValidator(value);
+  String? passwordValidator(String? value) => passwordValidator(value);
+}
+```
+
+### Available Validators
+The `ValidationMixin` provides these validators:
+
+- `emailValidator(String? email)` - Email format validation
+- `passwordValidator(String? password)` - Strong password validation
+- `newPasswordValidator(String? password)` - New password validation
+- `confirmPasswordValidator(String? value, String password)` - Password confirmation
+- `confirmPasswordValidatorForForgotPassword(String? value, String newPassword)` - Forgot password confirmation
+- `phoneValidator(String? value, int phoneLength)` - Phone number validation
+- `nameValidator(String? value)` - Name validation
+- `addressValidator(String? value)` - Address validation
+
+## Form Structure
+
+### Basic Form Setup
+```dart
+class FeatureController extends BaseViewController with ValidationMixin {
+  // Form key for validation
+  GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  
+  // Text controllers
+  TextEditingController nameController = TextEditingController();
+  TextEditingController emailController = TextEditingController();
+  TextEditingController phoneController = TextEditingController();
+  
+  // Form submission
+  Future<void> onSubmit() async {
+    if (formKey.currentState?.validate() ?? false) {
+      // Form is valid, proceed with submission
+      await _submitForm();
+    }
+  }
+  
+  // Cleanup
+  @override
+  void onClose() {
+    nameController.dispose();
+    emailController.dispose();
+    phoneController.dispose();
+    super.onClose();
+  }
+}
+```
+
+### Form Widget Implementation
+```dart
+class FeatureView extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return GetBuilder<FeatureController>(
+      builder: (controller) => Scaffold(
+        body: Form(
+          key: controller.formKey,
+          child: Column(
+            children: [
+              TextFormField(
+                controller: controller.nameController,
+                decoration: InputDecoration(
+                  labelText: 'Name',
+                  hintText: 'Enter your name',
+                ),
+                validator: controller.nameValidator,
+              ),
+              TextFormField(
+                controller: controller.emailController,
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  hintText: 'Enter your email',
+                ),
+                keyboardType: TextInputType.emailAddress,
+                validator: controller.emailValidator,
+              ),
+              TextFormField(
+                controller: controller.phoneController,
+                decoration: InputDecoration(
+                  labelText: 'Phone',
+                  hintText: 'Enter your phone number',
+                ),
+                keyboardType: TextInputType.phone,
+                validator: (value) => controller.phoneValidator(value, 10),
+              ),
+              ElevatedButton(
+                onPressed: controller.onSubmit,
+                child: Text('Submit'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+```
+
+## Input Field Patterns
+
+### TextFormField Configuration
+```dart
+TextFormField(
+  controller: controller.fieldController,
+  decoration: InputDecoration(
+    labelText: 'Field Label',
+    hintText: 'Enter value',
+    prefixIcon: Icon(Icons.icon),
+    suffixIcon: IconButton(
+      icon: Icon(Icons.clear),
+      onPressed: () => controller.fieldController.clear(),
+    ),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+    ),
+  ),
+  keyboardType: TextInputType.emailAddress,
+  textInputAction: TextInputAction.next,
+  validator: controller.fieldValidator,
+  onChanged: (value) {
+    // Handle real-time validation or formatting
+  },
+)
+```
+
+### Input Decoration Theme
+Use the app's input decoration theme from [AppTheme](mdc:lib/core/themes/app_theme.dart):
+
+```dart
+// The theme automatically applies:
+// - Filled background with AppColors.containerFillColor
+// - Rounded corners (10px)
+// - No border by default
+// - Focused border with AppColors.primaryColor
+// - Error border with AppColors.red
+// - Consistent padding
+```
+
+### Keyboard Types
+Use appropriate keyboard types for different input fields:
+
+```dart
+// Email
+keyboardType: TextInputType.emailAddress
+
+// Phone
+keyboardType: TextInputType.phone
+
+// Number
+keyboardType: TextInputType.number
+
+// Decimal
+keyboardType: TextInputType.numberWithOptions(decimal: true)
+
+// URL
+keyboardType: TextInputType.url
+
+// Multiline text
+keyboardType: TextInputType.multiline
+maxLines: 3
+```
+
+## Validation Rules
+
+### Email Validation
+```dart
+String? emailValidator(String? email) {
+  if (email?.isNotEmpty ?? false) {
+    if (_isEmailValid(email)) {
+      return null; // Valid
+    } else {
+      return 'Please enter a valid email address';
+    }
+  } else {
+    return 'Please enter your email address';
+  }
+}
+```
+
+### Password Validation
+Strong password requirements:
+- At least 8 characters
+- At least one lowercase letter
+- At least one uppercase letter
+- At least one number
+- At least one symbol
+- No leading whitespace
+
+```dart
+String? passwordValidator(String? password) {
+  if (password == null || password.isEmpty) {
+    return 'Please enter your password';
+  }
+  if (password.startsWith(' ')) {
+    return 'No leading white spaces allowed.';
+  }
+  if (password.length < 8) {
+    return 'Password must be at least 8 characters long';
+  }
+  // Additional validation rules...
+}
+```
+
+### Phone Validation
+```dart
+String? phoneValidator(String? value, int phoneLength) {
+  RegExp regExp = RegExp(r'^[+]*[(]?[0-9]{1,4}[)]?[-\s./0-9]*$');
+  bool isMatched = value != null ? regExp.hasMatch(value) : false;
+  
+  if (value == null || value.isEmpty) {
+    return 'Please enter your mobile number';
+  } else if (value.length < phoneLength) {
+    return 'Please enter a valid mobile number';
+  } else if (isMatched) {
+    return null; // Valid
+  } else {
+    return 'Please enter a valid mobile number';
+  }
+}
+```
+
+## Form State Management
+
+### Loading States
+```dart
+class FeatureController extends BaseViewController {
+  RxBool isSubmitting = false.obs;
+  
+  Future<void> onSubmit() async {
+    if (formKey.currentState?.validate() ?? false) {
+      isSubmitting(true);
+      
+      try {
+        await _submitForm();
+      } finally {
+        isSubmitting(false);
+      }
+    }
+  }
+}
+```
+
+### Error States
+```dart
+class FeatureController extends BaseViewController {
+  RxString formError = ''.obs;
+  
+  Future<void> onSubmit() async {
+    formError.value = ''; // Clear previous errors
+    
+    if (formKey.currentState?.validate() ?? false) {
+      final result = await _submitForm();
+      
+      result.when(
+        (success) {
+          // Handle success
+        },
+        (error) {
+          formError.value = error;
+        },
+      );
+    }
+  }
+}
+```
+
+### Real-time Validation
+```dart
+class FeatureController extends BaseViewController {
+  RxString emailError = ''.obs;
+  
+  void onEmailChanged(String value) {
+    // Clear error when user starts typing
+    if (emailError.value.isNotEmpty) {
+      emailError.value = '';
+    }
+    
+    // Optional: Real-time validation
+    if (value.isNotEmpty && !_isEmailValid(value)) {
+      emailError.value = 'Invalid email format';
+    }
+  }
+}
+```
+
+## Custom Validators
+
+### Creating Custom Validators
+```dart
+class FeatureController extends BaseViewController {
+  // Custom validator for specific requirements
+  String? customValidator(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'This field is required';
+    }
+    
+    if (value.length < 3) {
+      return 'Must be at least 3 characters';
+    }
+    
+    if (!value.contains('@')) {
+      return 'Must contain @ symbol';
+    }
+    
+    return null; // Valid
+  }
+  
+  // Conditional validator
+  String? conditionalValidator(String? value) {
+    if (someCondition && (value == null || value.isEmpty)) {
+      return 'This field is required when condition is met';
+    }
+    return null;
+  }
+}
+```
+
+### Cross-field Validation
+```dart
+class FeatureController extends BaseViewController {
+  String? confirmPasswordValidator(String? value) {
+    if (value != passwordController.text) {
+      return 'Passwords do not match';
+    }
+    return null;
+  }
+  
+  String? dateRangeValidator(String? value) {
+    final startDate = DateTime.tryParse(startDateController.text);
+    final endDate = DateTime.tryParse(value ?? '');
+    
+    if (startDate != null && endDate != null && endDate.isBefore(startDate)) {
+      return 'End date must be after start date';
+    }
+    
+    return null;
+  }
+}
+```
+
+## Form Submission Patterns
+
+### Basic Submission
+```dart
+Future<void> onSubmit() async {
+  if (formKey.currentState?.validate() ?? false) {
+    FocusManager.instance.primaryFocus?.unfocus();
+    
+    final formData = {
+      'name': nameController.text.trim(),
+      'email': emailController.text.trim(),
+      'phone': phoneController.text.trim(),
+    };
+    
+    await _submitForm(formData);
+  }
+}
+```
+
+### With Loading State
+```dart
+Future<void> onSubmit() async {
+  if (formKey.currentState?.validate() ?? false) {
+    isLoading(true);
+    
+    try {
+      final result = await _repository.submitForm(formData);
+      
+      result.when(
+        (success) {
+          AppSnackBar.success(message: 'Form submitted successfully');
+          Get.back();
+        },
+        (error) {
+          AppSnackBar.error(message: error);
+        },
+      );
+    } finally {
+      isLoading(false);
+    }
+  }
+}
+```
+
+### With Confirmation
+```dart
+Future<void> onSubmit() async {
+  if (formKey.currentState?.validate() ?? false) {
+    final confirmed = await Get.dialog<bool>(
+      AlertDialog(
+        title: Text('Confirm Submission'),
+        content: Text('Are you sure you want to submit this form?'),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Get.back(result: true),
+            child: Text('Submit'),
+          ),
+        ],
+      ),
+    );
+    
+    if (confirmed == true) {
+      await _submitForm();
+    }
+  }
+}
+```
+
+## Best Practices
+
+### 1. Form Validation
+- Always validate on both client and server side
+- Provide clear, actionable error messages
+- Validate in real-time when appropriate
+- Use appropriate keyboard types
+
+### 2. User Experience
+- Clear form labels and hints
+- Show validation errors immediately
+- Provide loading states during submission
+- Handle form reset and cleanup
+
+### 3. Performance
+- Dispose text controllers properly
+- Avoid unnecessary rebuilds
+- Use debouncing for real-time validation
+- Optimize form state management
+
+### 4. Accessibility
+- Use semantic labels
+- Provide proper focus management
+- Support screen readers
+- Ensure proper contrast ratios
+
+### 5. Security
+- Sanitize input data
+- Validate on server side
+- Handle sensitive data carefully
+- Use secure input methods for passwords

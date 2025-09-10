@@ -1,0 +1,496 @@
+---
+globs: *error*.dart,*exception*.dart,*snack*.dart,*toast*.dart
+description: Error handling and user feedback patterns
+---
+
+# Error Handling and User Feedback
+
+## Error Handling Strategy
+
+### Error Types
+Handle different types of errors appropriately:
+
+1. **Network Errors**: Connection timeouts, no internet
+2. **API Errors**: Server errors, validation errors, authentication errors
+3. **Validation Errors**: Form validation, input validation
+4. **Business Logic Errors**: Application-specific errors
+5. **System Errors**: Unexpected errors, crashes
+
+### Error Hierarchy
+```dart
+// Base error class
+abstract class AppError {
+  final String message;
+  final String? code;
+  
+  AppError(this.message, {this.code});
+}
+
+// Specific error types
+class NetworkError extends AppError {
+  NetworkError(super.message, {super.code});
+}
+
+class ApiError extends AppError {
+  final int? statusCode;
+  ApiError(super.message, {super.code, this.statusCode});
+}
+
+class ValidationError extends AppError {
+  ValidationError(super.message, {super.code});
+}
+
+class BusinessLogicError extends AppError {
+  BusinessLogicError(super.message, {super.code});
+}
+```
+
+## User Feedback Patterns
+
+### AppSnackBar Usage
+Use [AppSnackBar](mdc:lib/core/utils/app_snack_bar.dart) for consistent user feedback:
+
+```dart
+// Success messages
+AppSnackBar.success(message: 'Operation completed successfully');
+
+// Error messages
+AppSnackBar.error(message: 'Something went wrong');
+
+// Warning messages
+AppSnackBar.warning(message: 'Please check your input');
+
+// Info messages
+AppSnackBar.info(message: 'Information message');
+
+// Custom snackbar with action
+AppSnackBar.show(
+  message: 'File deleted',
+  type: SnackBarType.success,
+  onPress: () => _undoDelete(),
+  buttonText: 'Undo',
+);
+```
+
+### SnackBar Types
+The app supports four snackbar types:
+
+```dart
+enum SnackBarType { success, info, warning, error }
+
+// Success: Green border, checkmark icon
+// Info: Blue border, info icon  
+// Warning: Orange border, warning icon
+// Error: Red border, error icon
+```
+
+## API Error Handling
+
+### Result Pattern
+Use the `Result` pattern for API responses:
+
+```dart
+Future<Result<BaseResponse<UserModel>, String>> getUser() async {
+  try {
+    final response = await _apiService.getUser();
+    return Success(response);
+  } catch (e) {
+    return Failure(_handleError(e));
+  }
+}
+```
+
+### Error Handling in Controllers
+```dart
+class FeatureController extends BaseViewController {
+  Future<void> loadData() async {
+    try {
+      isLoading(true);
+      hasError(false);
+      
+      final result = await _repository.fetchData();
+      
+      result.when(
+        (response) {
+          // Handle success
+          if (response.data != null) {
+            dataList.value = response.data!;
+          }
+        },
+        (error) {
+          // Handle error
+          hasError(true);
+          errorMessage.value = error;
+          AppSnackBar.error(message: error);
+        },
+      );
+    } catch (e) {
+      // Handle unexpected errors
+      hasError(true);
+      errorMessage.value = 'An unexpected error occurred';
+      AppSnackBar.error(message: 'An unexpected error occurred');
+    } finally {
+      isLoading(false);
+    }
+  }
+}
+```
+
+### Network Error Handling
+```dart
+class NetworkErrorHandler {
+  static String handleDioException(DioException e) {
+    switch (e.type) {
+      case DioExceptionType.connectionTimeout:
+        return 'Connection timeout. Please check your internet connection.';
+      case DioExceptionType.sendTimeout:
+        return 'Request timeout. Please try again.';
+      case DioExceptionType.receiveTimeout:
+        return 'Response timeout. Please try again.';
+      case DioExceptionType.badResponse:
+        return _handleHttpError(e.response?.statusCode);
+      case DioExceptionType.cancel:
+        return 'Request was cancelled.';
+      case DioExceptionType.connectionError:
+        return 'No internet connection. Please check your network.';
+      default:
+        return 'Network error occurred. Please try again.';
+    }
+  }
+  
+  static String _handleHttpError(int? statusCode) {
+    switch (statusCode) {
+      case 400:
+        return 'Bad request. Please check your input.';
+      case 401:
+        return 'Unauthorized. Please sign in again.';
+      case 403:
+        return 'Access denied. You don\'t have permission.';
+      case 404:
+        return 'Resource not found.';
+      case 422:
+        return 'Validation error. Please check your input.';
+      case 500:
+        return 'Server error. Please try again later.';
+      default:
+        return 'An error occurred. Please try again.';
+    }
+  }
+}
+```
+
+## Form Error Handling
+
+### Validation Errors
+Handle form validation errors gracefully:
+
+```dart
+class SignInController extends BaseViewController with ValidationMixin {
+  RxString formError = ''.obs;
+  
+  Future<void> onSignIn() async {
+    // Clear previous errors
+    formError.value = '';
+    
+    if (formKey.currentState?.validate() ?? false) {
+      final result = await _repository.signIn(formData);
+      
+      result.when(
+        (response) {
+          // Handle success
+          Get.offAllNamed(RoutesName.homeView);
+        },
+        (error) {
+          // Handle API errors
+          if (error.contains('validation')) {
+            formError.value = error;
+          } else {
+            AppSnackBar.error(message: error);
+          }
+        },
+      );
+    }
+  }
+}
+```
+
+### Real-time Error Display
+```dart
+class FeatureView extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return GetBuilder<FeatureController>(
+      builder: (controller) => Scaffold(
+        body: Column(
+          children: [
+            // Form fields
+            TextFormField(
+              controller: controller.emailController,
+              validator: controller.emailValidator,
+              decoration: InputDecoration(
+                labelText: 'Email',
+                errorText: controller.emailError.value.isNotEmpty 
+                  ? controller.emailError.value 
+                  : null,
+              ),
+            ),
+            
+            // Global form error
+            Obx(() {
+              if (controller.formError.value.isNotEmpty) {
+                return Container(
+                  padding: EdgeInsets.all(12),
+                  margin: EdgeInsets.symmetric(vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.red.shade50,
+                    border: Border.all(color: Colors.red.shade200),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    controller.formError.value,
+                    style: TextStyle(color: Colors.red.shade700),
+                  ),
+                );
+              }
+              return SizedBox.shrink();
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+}
+```
+
+## Loading States
+
+### Loading State Management
+```dart
+class FeatureController extends BaseViewController {
+  RxBool isLoading = false.obs;
+  RxBool isSubmitting = false.obs;
+  RxBool isRefreshing = false.obs;
+  
+  Future<void> loadData() async {
+    isLoading(true);
+    try {
+      // Load data
+    } finally {
+      isLoading(false);
+    }
+  }
+  
+  Future<void> submitForm() async {
+    isSubmitting(true);
+    try {
+      // Submit form
+    } finally {
+      isSubmitting(false);
+    }
+  }
+}
+```
+
+### Loading UI Patterns
+```dart
+// Loading overlay
+Obx(() {
+  if (controller.isLoading.value) {
+    return Stack(
+      children: [
+        // Main content
+        _buildContent(),
+        
+        // Loading overlay
+        Container(
+          color: Colors.black.withOpacity(0.3),
+          child: Center(
+            child: CircularProgressIndicator(),
+          ),
+        ),
+      ],
+    );
+  }
+  return _buildContent();
+});
+
+// Loading button
+Obx(() => ElevatedButton(
+  onPressed: controller.isSubmitting.value ? null : controller.onSubmit,
+  child: controller.isSubmitting.value
+    ? SizedBox(
+        width: 20,
+        height: 20,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      )
+    : Text('Submit'),
+));
+```
+
+## Error Recovery
+
+### Retry Mechanisms
+```dart
+class FeatureController extends BaseViewController {
+  int retryCount = 0;
+  static const int maxRetries = 3;
+  
+  Future<void> loadDataWithRetry() async {
+    try {
+      await loadData();
+      retryCount = 0; // Reset on success
+    } catch (e) {
+      if (retryCount < maxRetries) {
+        retryCount++;
+        await Future.delayed(Duration(seconds: 2));
+        loadDataWithRetry();
+      } else {
+        AppSnackBar.error(message: 'Failed after $maxRetries attempts');
+      }
+    }
+  }
+}
+```
+
+### Fallback UI
+```dart
+class FeatureView extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return GetBuilder<FeatureController>(
+      builder: (controller) => Scaffold(
+        body: Obx(() {
+          if (controller.isLoading.value) {
+            return Center(child: CircularProgressIndicator());
+          }
+          
+          if (controller.hasError.value) {
+            return _buildErrorWidget(controller);
+          }
+          
+          return _buildContent(controller);
+        }),
+      ),
+    );
+  }
+  
+  Widget _buildErrorWidget(FeatureController controller) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 64, color: Colors.red),
+          SizedBox(height: 16),
+          Text(
+            'Something went wrong',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 8),
+          Text(
+            controller.errorMessage.value,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey[600]),
+          ),
+          SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: controller.retry,
+            child: Text('Try Again'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+```
+
+## Logging and Debugging
+
+### Error Logging
+```dart
+class ErrorLogger {
+  static void logError(String message, {Object? error, StackTrace? stackTrace}) {
+    if (kDebugMode) {
+      print('ERROR: $message');
+      if (error != null) print('Error: $error');
+      if (stackTrace != null) print('Stack: $stackTrace');
+    }
+    
+    // In production, send to crash reporting service
+    // FirebaseCrashlytics.instance.recordError(error, stackTrace);
+  }
+  
+  static void logApiError(String endpoint, int? statusCode, String message) {
+    logError('API Error: $endpoint', error: 'Status: $statusCode, Message: $message');
+  }
+}
+```
+
+### Debug Information
+```dart
+class DebugInfo {
+  static void showErrorDetails(String message, {Object? error}) {
+    if (kDebugMode) {
+      Get.dialog(
+        AlertDialog(
+          title: Text('Error Details'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Message: $message'),
+              if (error != null) ...[
+                SizedBox(height: 8),
+                Text('Error: $error'),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Get.back(),
+              child: Text('Close'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
+}
+```
+
+## Best Practices
+
+### 1. Error Handling
+- Always handle errors gracefully
+- Provide meaningful error messages
+- Log errors for debugging
+- Implement retry mechanisms where appropriate
+
+### 2. User Experience
+- Show loading states during operations
+- Provide clear feedback for all actions
+- Use appropriate UI patterns for different error types
+- Allow users to recover from errors
+
+### 3. Error Messages
+- Use user-friendly language
+- Be specific about what went wrong
+- Provide actionable guidance
+- Avoid technical jargon
+
+### 4. Performance
+- Don't block the UI during error handling
+- Use appropriate loading indicators
+- Handle errors asynchronously
+- Implement proper cleanup
+
+### 5. Testing
+- Test error scenarios
+- Verify error messages
+- Test retry mechanisms
+- Validate error recovery flows
+
+### 6. Monitoring
+- Log errors for analysis
+- Track error rates
+- Monitor user experience
+- Implement crash reporting

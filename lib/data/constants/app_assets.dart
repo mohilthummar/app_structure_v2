@@ -10,6 +10,9 @@ class AppAssets {
   static const String imagePath = "assets/images/";
   static const String jsonPath = "assets/json/";
 
+  /// Common Icons
+  static const String icBack = "${iconPath}ic_back.svg";
+
   /// Snack Bar Icons
   static const String icWarning = "${iconPath}ic_warning.svg";
 
@@ -17,9 +20,4 @@ class AppAssets {
   static const String splashIcon = "${imagePath}splash_icon.svg";
 
   /// Login View
-  static const String icAppLogo = "${imagePath}ic_app_logo.svg";
-  static const String icEmail = "${iconPath}ic_email.svg";
-  static const String icEye = "${iconPath}ic_eye.svg";
-  static const String icEyeClose = "${iconPath}ic_eye_close.svg";
-  static const String icPassword = "${iconPath}ic_lock.svg";
 }

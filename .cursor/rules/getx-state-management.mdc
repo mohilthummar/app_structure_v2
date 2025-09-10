@@ -1,0 +1,382 @@
+---
+globs: *controller*.dart,*bindings*.dart
+description: GetX state management patterns and controller guidelines
+---
+
+# GetX State Management Patterns
+
+## Controller Architecture
+
+### Base Controller
+All controllers should extend [BaseViewController](mdc:lib/core/controller/base_view_controller.dart) for lifecycle management:
+
+```dart
+class FeatureController extends BaseViewController {
+  // Controller implementation
+}
+```
+
+### Controller Structure
+Follow this pattern for all controllers:
+
+```dart
+class FeatureController extends BaseViewController {
+  // 1. Dependencies
+  final FeatureRepository _repository = FeatureRepository();
+  
+  // 2. Form management
+  GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  TextEditingController textController = TextEditingController();
+  
+  // 3. Observable state variables
+  RxBool isLoading = false.obs;
+  RxBool isError = false.obs;
+  RxString errorMessage = ''.obs;
+  RxList<DataModel> dataList = <DataModel>[].obs;
+  
+  // 4. Lifecycle methods
+  @override
+  void onInit() {
+    super.onInit();
+    _initializeData();
+  }
+  
+  @override
+  void onReady() {
+    super.onReady();
+    // Called after widget is rendered
+  }
+  
+  @override
+  void onClose() {
+    // Dispose controllers and resources
+    textController.dispose();
+    super.onClose();
+  }
+  
+  // 5. Public methods
+  Future<void> performAction() async {
+    // Implementation
+  }
+  
+  // 6. Private methods
+  void _initializeData() {
+    // Private initialization
+  }
+}
+```
+
+## State Management Patterns
+
+### 1. Reactive Variables
+Use `Rx` types for reactive state:
+
+```dart
+// Boolean states
+RxBool isLoading = false.obs;
+RxBool isVisible = true.obs;
+
+// String states
+RxString selectedValue = ''.obs;
+RxString errorMessage = ''.obs;
+
+// List states
+RxList<String> items = <String>[].obs;
+RxList<UserModel> users = <UserModel>[].obs;
+
+// Object states
+Rx<UserModel?> selectedUser = Rx<UserModel?>(null);
+```
+
+### 2. State Updates
+Update reactive variables using `.value` or assignment:
+
+```dart
+// Update boolean
+isLoading.value = true;
+// or
+isLoading(true);
+
+// Update string
+errorMessage.value = 'Error occurred';
+// or
+errorMessage('Error occurred');
+
+// Update list
+items.add('New item');
+items.removeAt(0);
+items.clear();
+
+// Update object
+selectedUser.value = newUser;
+```
+
+### 3. State Observers
+Use `ever`, `once`, or `debounce` for reactive programming:
+
+```dart
+@override
+void onInit() {
+  super.onInit();
+  
+  // React to changes
+  ever(isLoading, (bool loading) {
+    if (loading) {
+      // Show loading indicator
+    } else {
+      // Hide loading indicator
+    }
+  });
+  
+  // React once
+  once(selectedUser, (UserModel? user) {
+    if (user != null) {
+      // Navigate to user profile
+    }
+  });
+  
+  // Debounce search
+  debounce(searchQuery, (String query) {
+    _performSearch(query);
+  }, time: Duration(milliseconds: 500));
+}
+```
+
+## UI Integration Patterns
+
+### 1. GetBuilder for Specific Controllers
+Use `GetBuilder` when you need to rebuild specific parts of the UI:
+
+```dart
+class FeatureView extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return GetBuilder<FeatureController>(
+      builder: (controller) => Scaffold(
+        body: Column(
+          children: [
+            Text('Count: ${controller.count}'),
+            ElevatedButton(
+              onPressed: controller.increment,
+              child: Text('Increment'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+```
+
+### 2. Obx for Reactive Updates
+Use `Obx` for automatic reactive updates:
+
+```dart
+class FeatureView extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Obx(() => Column(
+        children: [
+          Text('Count: ${controller.count.value}'),
+          if (controller.isLoading.value)
+            CircularProgressIndicator(),
+        ],
+      )),
+    );
+  }
+}
+```
+
+### 3. GetX for Full Controller Access
+Use `GetX` for full controller access with reactive updates:
+
+```dart
+class FeatureView extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return GetX<FeatureController>(
+      builder: (controller) => Scaffold(
+        body: Column(
+          children: [
+            Text('Count: ${controller.count}'),
+            if (controller.isLoading)
+              CircularProgressIndicator(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+```
+
+## Dependency Injection with Bindings
+
+### 1. Binding Structure
+Create bindings for each feature:
+
+```dart
+class FeatureBindings extends Bindings {
+  @override
+  void dependencies() {
+    // Lazy initialization - created when first accessed
+    Get.lazyPut<FeatureController>(() => FeatureController());
+    Get.lazyPut<FeatureRepository>(() => FeatureRepository());
+    
+    // Permanent - created immediately and never removed
+    Get.put<ApiService>(ApiService(), permanent: true);
+    
+    // Async initialization
+    Get.putAsync<DatabaseService>(() async {
+      final db = DatabaseService();
+      await db.initialize();
+      return db;
+    });
+  }
+}
+```
+
+### 2. Binding Registration
+Register bindings in [routes.dart](mdc:lib/routes/routes.dart):
+
+```dart
+List<GetPage> pages = [
+  getPage(
+    name: RoutesName.featureView,
+    page: () => const FeatureView(),
+    binding: FeatureBindings(),
+  ),
+];
+```
+
+### 3. Dependency Access
+Access dependencies in controllers:
+
+```dart
+class FeatureController extends BaseViewController {
+  // Direct access
+  final FeatureRepository _repository = Get.find<FeatureRepository>();
+  
+  // Or with null safety
+  FeatureRepository get repository => Get.find<FeatureRepository>();
+}
+```
+
+## Form Management
+
+### 1. Form Controllers
+Use `TextEditingController` for form inputs:
+
+```dart
+class SignInController extends BaseViewController {
+  GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  
+  TextEditingController emailController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
+  
+  @override
+  void onClose() {
+    emailController.dispose();
+    passwordController.dispose();
+    super.onClose();
+  }
+}
+```
+
+### 2. Form Validation
+Use the [ValidationMixin](mdc:lib/core/utils/validation_mixin.dart) for form validation:
+
+```dart
+class SignInController extends BaseViewController with ValidationMixin {
+  String? emailValidator(String? value) => emailValidator(value);
+  String? passwordValidator(String? value) => passwordValidator(value);
+  
+  Future<void> onSignIn() async {
+    if (formKey.currentState?.validate() ?? false) {
+      // Proceed with sign in
+    }
+  }
+}
+```
+
+## Error Handling
+
+### 1. Error State Management
+Handle errors with reactive variables:
+
+```dart
+class FeatureController extends BaseViewController {
+  RxBool hasError = false.obs;
+  RxString errorMessage = ''.obs;
+  
+  Future<void> loadData() async {
+    try {
+      isLoading(true);
+      hasError(false);
+      
+      final result = await _repository.fetchData();
+      result.when(
+        (data) {
+          dataList.value = data;
+        },
+        (error) {
+          hasError(true);
+          errorMessage.value = error;
+        },
+      );
+    } catch (e) {
+      hasError(true);
+      errorMessage.value = 'An unexpected error occurred';
+    } finally {
+      isLoading(false);
+    }
+  }
+}
+```
+
+### 2. Error Display
+Show errors in UI:
+
+```dart
+Obx(() {
+  if (controller.hasError.value) {
+    return Text(
+      controller.errorMessage.value,
+      style: TextStyle(color: Colors.red),
+    );
+  }
+  return SizedBox.shrink();
+})
+```
+
+## Best Practices
+
+### 1. Controller Lifecycle
+- Always call `super.onInit()`, `super.onReady()`, and `super.onClose()`
+- Dispose text controllers in `onClose()`
+- Use `onInit()` for initialization
+- Use `onReady()` for post-render operations
+
+### 2. State Updates
+- Use `.value` for single updates
+- Use direct assignment for multiple updates
+- Avoid unnecessary reactive variables
+- Use `Obx` for simple reactive updates
+
+### 3. Performance
+- Use `GetBuilder` for specific controller updates
+- Use `Obx` for reactive variable updates
+- Avoid deep nesting of reactive widgets
+- Dispose controllers properly
+
+### 4. Testing
+- Mock dependencies in tests
+- Test controller logic separately
+- Use `Get.testMode = true` for testing
+- Test error scenarios
+
+### 5. Memory Management
+- Always dispose text controllers
+- Use `lazyPut` for non-essential dependencies
+- Remove controllers when not needed
+- Monitor memory usage in development

@@ -1,0 +1,476 @@
+---
+globs: *routes*.dart,*navigation*.dart
+description: Routing and navigation patterns using GetX
+---
+
+# Routing and Navigation Patterns
+
+## Route Configuration
+
+### Route Names
+Define all route names in [RoutesName](mdc:lib/routes/routes_name.dart):
+
+```dart
+class RoutesName {
+  RoutesName._();
+  
+  // Auth Flow
+  static const String splashView = '/splash';
+  static const String signInView = '/sign-in';
+  static const String signUpView = '/sign-up';
+  static const String forgotPasswordView = '/forgot-password';
+  static const String otpVerificationView = '/otp-verification';
+  
+  // Main App
+  static const String homeView = '/home';
+  static const String profileView = '/profile';
+  static const String settingsView = '/settings';
+}
+```
+
+### Route Definitions
+Configure routes in [routes.dart](mdc:lib/routes/routes.dart):
+
+```dart
+List<GetPage> pages = [
+  // Auth Flow Routes
+  getPage(
+    name: RoutesName.splashView,
+    page: () => const SplashView(),
+    binding: SplashBindings(),
+  ),
+  getPage(
+    name: RoutesName.signInView,
+    page: () => const SignInView(),
+    binding: SignInBindings(),
+  ),
+  getPage(
+    name: RoutesName.signUpView,
+    page: () => const SignUpView(),
+    binding: SignUpBindings(),
+  ),
+  
+  // Main App Routes
+  getPage(
+    name: RoutesName.homeView,
+    page: () => const HomeView(),
+    binding: HomeBindings(),
+  ),
+];
+```
+
+### Helper Function
+Use the `getPage` helper for consistent route creation:
+
+```dart
+GetPage getPage({
+  String? name,
+  GetPageBuilder? page,
+  Bindings? binding,
+  List<GetPage<dynamic>>? children,
+}) {
+  return GetPage(
+    name: name!,
+    page: page!,
+    binding: binding,
+    children: children ?? [],
+  );
+}
+```
+
+## Navigation Methods
+
+### Basic Navigation
+```dart
+// Navigate to a new screen
+Get.toNamed(RoutesName.signInView);
+
+// Navigate with arguments
+Get.toNamed(RoutesName.profileView, arguments: {'userId': '123'});
+
+// Navigate and replace current screen
+Get.offNamed(RoutesName.homeView);
+
+// Navigate and clear all previous screens
+Get.offAllNamed(RoutesName.splashView);
+
+// Navigate back
+Get.back();
+
+// Navigate back with result
+Get.back(result: 'success');
+```
+
+### Navigation with Arguments
+```dart
+// Sending arguments
+Get.toNamed(
+  RoutesName.detailView,
+  arguments: {
+    'id': 123,
+    'title': 'Product Details',
+    'data': productModel,
+  },
+);
+
+// Receiving arguments
+class DetailController extends BaseViewController {
+  late int id;
+  late String title;
+  late ProductModel data;
+  
+  @override
+  void onInit() {
+    super.onInit();
+    
+    final args = Get.arguments as Map<String, dynamic>?;
+    if (args != null) {
+      id = args['id'] ?? 0;
+      title = args['title'] ?? '';
+      data = args['data'] ?? ProductModel();
+    }
+  }
+}
+```
+
+### Navigation with Parameters
+```dart
+// Define route with parameters
+getPage(
+  name: '/product/:id',
+  page: () => const ProductView(),
+  binding: ProductBindings(),
+);
+
+// Navigate with parameters
+Get.toNamed('/product/123');
+
+// Access parameters in controller
+class ProductController extends BaseViewController {
+  late String productId;
+  
+  @override
+  void onInit() {
+    super.onInit();
+    productId = Get.parameters['id'] ?? '';
+  }
+}
+```
+
+### Navigation with Query Parameters
+```dart
+// Navigate with query parameters
+Get.toNamed(
+  RoutesName.searchView,
+  parameters: {
+    'query': 'flutter',
+    'category': 'mobile',
+    'page': '1',
+  },
+);
+
+// Access query parameters
+class SearchController extends BaseViewController {
+  late String query;
+  late String category;
+  late int page;
+  
+  @override
+  void onInit() {
+    super.onInit();
+    query = Get.parameters['query'] ?? '';
+    category = Get.parameters['category'] ?? '';
+    page = int.tryParse(Get.parameters['page'] ?? '1') ?? 1;
+  }
+}
+```
+
+## Navigation Guards
+
+### Route Middleware
+Implement navigation guards for authentication and authorization:
+
+```dart
+class AuthMiddleware extends GetMiddleware {
+  @override
+  RouteSettings? redirect(String? route) {
+    // Check if user is authenticated
+    if (!Preferences.isLogged) {
+      return RouteSettings(name: RoutesName.signInView);
+    }
+    return null; // Allow navigation
+  }
+}
+
+// Apply middleware to protected routes
+getPage(
+  name: RoutesName.profileView,
+  page: () => const ProfileView(),
+  binding: ProfileBindings(),
+  middlewares: [AuthMiddleware()],
+);
+```
+
+### Conditional Navigation
+```dart
+class FeatureController extends BaseViewController {
+  Future<void> navigateToFeature() async {
+    // Check conditions before navigation
+    if (await _checkPermissions()) {
+      Get.toNamed(RoutesName.featureView);
+    } else {
+      AppSnackBar.error(message: 'Permission denied');
+    }
+  }
+  
+  Future<bool> _checkPermissions() async {
+    // Check user permissions
+    return true;
+  }
+}
+```
+
+## Nested Navigation
+
+### Nested Routes
+Define nested routes for complex navigation structures:
+
+```dart
+getPage(
+  name: RoutesName.homeView,
+  page: () => const HomeView(),
+  binding: HomeBindings(),
+  children: [
+    getPage(
+      name: RoutesName.dashboardView,
+      page: () => const DashboardView(),
+      binding: DashboardBindings(),
+    ),
+    getPage(
+      name: RoutesName.analyticsView,
+      page: () => const AnalyticsView(),
+      binding: AnalyticsBindings(),
+    ),
+  ],
+);
+```
+
+### Bottom Navigation
+Implement bottom navigation with GetX:
+
+```dart
+class MainController extends BaseViewController {
+  RxInt currentIndex = 0.obs;
+  
+  final List<Widget> pages = [
+    HomeView(),
+    SearchView(),
+    FavoritesView(),
+    ProfileView(),
+  ];
+  
+  void changePage(int index) {
+    currentIndex.value = index;
+  }
+}
+
+class MainView extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return GetBuilder<MainController>(
+      builder: (controller) => Scaffold(
+        body: controller.pages[controller.currentIndex.value],
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: controller.currentIndex.value,
+          onTap: controller.changePage,
+          items: [
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+            BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
+            BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'Favorites'),
+            BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+          ],
+        ),
+      ),
+    );
+  }
+}
+```
+
+## Dialog and Bottom Sheet Navigation
+
+### Custom Dialogs
+```dart
+// Show custom dialog
+Get.dialog(
+  AlertDialog(
+    title: Text('Confirm Action'),
+    content: Text('Are you sure you want to proceed?'),
+    actions: [
+      TextButton(
+        onPressed: () => Get.back(),
+        child: Text('Cancel'),
+      ),
+      ElevatedButton(
+        onPressed: () {
+          Get.back();
+          _performAction();
+        },
+        child: Text('Confirm'),
+      ),
+    ],
+  ),
+);
+
+// Show dialog with result
+final result = await Get.dialog<bool>(
+  ConfirmationDialog(),
+);
+if (result == true) {
+  // Handle confirmation
+}
+```
+
+### Bottom Sheets
+```dart
+// Show bottom sheet
+Get.bottomSheet(
+  Container(
+    height: 200,
+    child: Column(
+      children: [
+        Text('Bottom Sheet Content'),
+        ElevatedButton(
+          onPressed: () => Get.back(),
+          child: Text('Close'),
+        ),
+      ],
+    ),
+  ),
+);
+
+// Show modal bottom sheet
+Get.bottomSheet(
+  ModalBottomSheet(),
+  isScrollControlled: true,
+  backgroundColor: Colors.transparent,
+);
+```
+
+### Snackbars
+```dart
+// Show snackbar
+Get.snackbar(
+  'Success',
+  'Operation completed successfully',
+  snackPosition: SnackPosition.BOTTOM,
+  backgroundColor: Colors.green,
+  colorText: Colors.white,
+);
+
+// Show error snackbar
+Get.snackbar(
+  'Error',
+  'Something went wrong',
+  snackPosition: SnackPosition.TOP,
+  backgroundColor: Colors.red,
+  colorText: Colors.white,
+);
+```
+
+## Navigation Patterns
+
+### Deep Linking
+Handle deep links and app state restoration:
+
+```dart
+class AppController extends BaseViewController {
+  @override
+  void onInit() {
+    super.onInit();
+    _handleDeepLinks();
+  }
+  
+  void _handleDeepLinks() {
+    // Handle initial route
+    final initialRoute = Get.parameters['route'];
+    if (initialRoute != null) {
+      Get.toNamed('/$initialRoute');
+    }
+  }
+}
+```
+
+### Navigation History
+Track navigation history for analytics:
+
+```dart
+class NavigationService {
+  static final List<String> _history = [];
+  
+  static void pushRoute(String route) {
+    _history.add(route);
+  }
+  
+  static void popRoute() {
+    if (_history.isNotEmpty) {
+      _history.removeLast();
+    }
+  }
+  
+  static String? getPreviousRoute() {
+    return _history.length > 1 ? _history[_history.length - 2] : null;
+  }
+}
+```
+
+### Route Transitions
+Customize route transitions:
+
+```dart
+getPage(
+  name: RoutesName.detailView,
+  page: () => const DetailView(),
+  binding: DetailBindings(),
+  transition: Transition.fadeIn,
+  transitionDuration: Duration(milliseconds: 300),
+  curve: Curves.easeInOut,
+);
+```
+
+## Best Practices
+
+### 1. Route Organization
+- Group related routes together
+- Use descriptive route names
+- Follow consistent naming conventions
+- Document route purposes
+
+### 2. Navigation Logic
+- Keep navigation logic in controllers
+- Use route guards for authentication
+- Handle navigation errors gracefully
+- Provide clear navigation paths
+
+### 3. State Management
+- Use bindings for dependency injection
+- Dispose controllers properly
+- Handle navigation state changes
+- Manage deep link state
+
+### 4. User Experience
+- Provide loading states during navigation
+- Show confirmation dialogs for destructive actions
+- Handle back button behavior
+- Maintain navigation context
+
+### 5. Performance
+- Use lazy loading for routes
+- Minimize navigation stack depth
+- Handle memory efficiently
+- Optimize route transitions
+
+### 6. Testing
+- Test navigation flows
+- Mock navigation dependencies
+- Verify route parameters
+- Test error scenarios

@@ -115,4 +115,32 @@ mixin ValidationMixin {
       return 'Please enter a valid mobile number';
     }
   }
+
+  /// Validate the name
+  String? nameValidator(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter your name';
+    }
+    if (value.trim().length < 2) {
+      return 'Name must be at least 2 characters long';
+    }
+    if (value.startsWith(' ')) {
+      return 'No leading white spaces allowed';
+    }
+    return null;
+  }
+
+  /// Validate the address
+  String? addressValidator(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter your address';
+    }
+    if (value.trim().length < 10) {
+      return 'Address must be at least 10 characters long';
+    }
+    if (value.startsWith(' ')) {
+      return 'No leading white spaces allowed';
+    }
+    return null;
+  }
 }

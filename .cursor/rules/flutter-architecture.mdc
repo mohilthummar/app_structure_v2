@@ -1,0 +1,236 @@
+---
+alwaysApply: true
+description: Flutter architecture patterns and project structure guidelines
+---
+
+# Flutter Architecture and Project Structure
+
+## Project Structure Overview
+This Flutter app follows a clean architecture pattern with clear separation of concerns:
+
+```
+lib/
+├── bootstrap.dart              # App initialization
+├── main.dart                   # App entry point
+├── my_app.dart                 # Main app widget
+├── core/                       # Core functionality
+│   ├── apis/                   # API service classes
+│   ├── controller/             # Base controllers
+│   ├── enums/                  # App-wide enums
+│   ├── extensions/             # Dart extensions
+│   ├── firebase/               # Firebase configuration
+│   ├── handler/                # App handlers (environment, etc.)
+│   ├── services/               # Core services
+│   ├── themes/                 # App theming
+│   ├── translations/           # Internationalization
+│   └── utils/                  # Utility functions
+├── data/                       # Data layer
+│   ├── constants/              # App constants
+│   ├── models/                 # Data models
+│   └── repositories/           # Data repositories
+├── packages/                   # Custom packages/widgets
+├── routes/                     # Navigation configuration
+├── view/                       # UI layer (screens)
+│   └── auth_flow/              # Feature-based organization
+└── widgets/                    # Reusable UI components
+```
+
+## Architecture Principles
+
+### 1. Clean Architecture Layers
+- **Presentation Layer**: `view/` and `widgets/` - UI components and screens
+- **Domain Layer**: `core/` - Business logic, controllers, and services
+- **Data Layer**: `data/` - Models, repositories, and API services
+
+### 2. Feature-Based Organization
+Organize code by features rather than technical layers:
+```
+view/
+├── auth_flow/
+│   ├── sign_in/
+│   │   ├── sign_in_view.dart
+│   │   ├── sign_in_controller.dart
+│   │   ├── sign_in_bindings.dart
+│   │   └── components/
+│   └── sign_up/
+└── other_features/
+```
+
+### 3. Dependency Injection
+Use GetX bindings for dependency injection:
+```dart
+class FeatureBindings extends Bindings {
+  @override
+  void dependencies() {
+    Get.lazyPut<FeatureController>(() => FeatureController());
+    Get.lazyPut<FeatureRepository>(() => FeatureRepository());
+  }
+}
+```
+
+## File Naming Conventions
+
+### Controllers
+- Pattern: `{feature}_controller.dart`
+- Example: `sign_in_controller.dart`
+- Extend `BaseViewController` for lifecycle management
+
+### Views/Screens
+- Pattern: `{feature}_view.dart`
+- Example: `sign_in_view.dart`
+- Use `StatelessWidget` with `GetBuilder` for state management
+
+### Bindings
+- Pattern: `{feature}_bindings.dart`
+- Example: `sign_in_bindings.dart`
+- Handle dependency injection for the feature
+
+### Models
+- Pattern: `{entity}_model.dart`
+- Example: `user_model.dart`
+- Include `fromJson` and `toJson` methods
+
+### Repositories
+- Pattern: `{feature}_repository.dart`
+- Example: `auth_repository.dart`
+- Handle data operations and API calls
+
+## Code Organization Guidelines
+
+### 1. Import Organization
+```dart
+// 1. Flutter/Dart imports
+import 'package:flutter/material.dart';
+
+// 2. Third-party packages
+import 'package:get/get.dart';
+import 'package:dio/dio.dart';
+
+// 3. Internal imports (core)
+import 'package:app_structure/core/utils/validation_mixin.dart';
+
+// 4. Internal imports (data)
+import 'package:app_structure/data/models/user_model.dart';
+
+// 5. Internal imports (view)
+import 'package:app_structure/view/auth_flow/sign_in/sign_in_controller.dart';
+```
+
+### 2. Class Structure
+```dart
+class FeatureController extends BaseViewController {
+  // 1. Dependencies
+  final FeatureRepository _repository = FeatureRepository();
+  
+  // 2. Form keys and controllers
+  GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  TextEditingController textController = TextEditingController();
+  
+  // 3. Observable variables
+  RxBool isLoading = false.obs;
+  RxString errorMessage = ''.obs;
+  
+  // 4. Lifecycle methods
+  @override
+  void onInit() {
+    super.onInit();
+    // Initialization logic
+  }
+  
+  // 5. Public methods
+  Future<void> performAction() async {
+    // Implementation
+  }
+  
+  // 6. Private methods
+  void _privateMethod() {
+    // Implementation
+  }
+  
+  // 7. Disposal
+  @override
+  void onClose() {
+    textController.dispose();
+    super.onClose();
+  }
+}
+```
+
+### 3. Widget Structure
+```dart
+class FeatureView extends StatelessWidget {
+  const FeatureView({super.key});
+  
+  @override
+  Widget build(BuildContext context) {
+    return GetBuilder<FeatureController>(
+      builder: (controller) => Scaffold(
+        appBar: _buildAppBar(context),
+        body: _buildBody(context, controller),
+      ),
+    );
+  }
+  
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
+    return AppBar(
+      title: Text('Feature Title'),
+    );
+  }
+  
+  Widget _buildBody(BuildContext context, FeatureController controller) {
+    return Column(
+      children: [
+        // Widget content
+      ],
+    );
+  }
+}
+```
+
+## Constants and Configuration
+
+### 1. App Constants
+Store all constants in [lib/data/constants/](mdc:lib/data/constants/):
+- `app_colors.dart` - Color definitions
+- `app_strings.dart` - String constants
+- `app_assets.dart` - Asset paths
+- `app_dimensions.dart` - Size constants
+- `app_enums.dart` - Enum definitions
+
+### 2. Environment Configuration
+Use [lib/core/handler/app_environment.dart](mdc:lib/core/handler/app_environment.dart) for environment-specific settings.
+
+### 3. API Configuration
+Configure API endpoints in [lib/core/handler/api_url.dart](mdc:lib/core/handler/api_url.dart).
+
+## Best Practices
+
+### 1. State Management
+- Use `GetX` for reactive state management
+- Keep controllers focused on single features
+- Use `RxBool`, `RxString`, etc. for reactive variables
+- Always dispose controllers and text controllers
+
+### 2. Error Handling
+- Use consistent error handling patterns
+- Show user-friendly error messages
+- Log errors for debugging
+- Handle network errors gracefully
+
+### 3. Performance
+- Use `const` constructors where possible
+- Implement proper disposal of resources
+- Use `GetBuilder` only when necessary
+- Optimize widget rebuilds
+
+### 4. Testing
+- Write unit tests for controllers
+- Test business logic separately from UI
+- Mock external dependencies
+- Test error scenarios
+
+### 5. Documentation
+- Document public APIs
+- Use meaningful variable and method names
+- Add comments for complex logic
+- Keep README files updated

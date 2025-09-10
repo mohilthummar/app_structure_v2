@@ -1,0 +1,390 @@
+---
+globs: *api*.dart,*repository*.dart,*service*.dart
+description: API networking patterns and repository guidelines
+---
+
+# API Networking and Repository Patterns
+
+## Repository Pattern
+
+### Repository Structure
+All repositories should extend [ClientService](mdc:lib/core/apis/client_service.dart) and follow this pattern:
+
+```dart
+class FeatureRepository extends ClientService {
+  Future<Result<BaseResponse<DataModel>, String>> fetchData({
+    required Map<String, dynamic> data,
+  }) async {
+    return request(
+      requestType: RequestType.post,
+      path: ApiUrls.fetchData,
+      data: data,
+    );
+  }
+  
+  Future<Result<BaseResponse<List<DataModel>>, String>> getList({
+    Map<String, dynamic>? queryParameters,
+  }) async {
+    return request(
+      requestType: RequestType.get,
+      path: ApiUrls.getList,
+      queryParameters: queryParameters,
+    );
+  }
+}
+```
+
+### API Endpoint Management
+Define all API endpoints in [ApiUrls](mdc:lib/core/handler/api_url.dart):
+
+```dart
+class ApiUrls {
+  ApiUrls._();
+  
+  // Base URL configuration
+  static String baseUrl({bool ignoreVersion = false, String? versionCode}) => 
+    AppEnvironment.getBaseURL(ignoreVersion: ignoreVersion);
+  
+  // Feature-specific endpoints
+  static String featureEndpoint = "feature/endpoint";
+  static String anotherEndpoint = "feature/another";
+}
+```
+
+## HTTP Client Configuration
+
+### Request Types
+Use the `RequestType` enum for different HTTP methods:
+
+```dart
+enum RequestType { get, post, delete, put, patch }
+
+// Usage examples
+request(requestType: RequestType.get, path: ApiUrls.getData);
+request(requestType: RequestType.post, path: ApiUrls.createData, data: data);
+request(requestType: RequestType.put, path: ApiUrls.updateData, data: data);
+request(requestType: RequestType.delete, path: ApiUrls.deleteData);
+```
+
+### Request Configuration
+The [ClientService](mdc:lib/core/apis/client_service.dart) handles:
+
+- **Base URL**: Configured via `AppEnvironment`
+- **Timeouts**: 6 seconds for connect, send, and receive
+- **Response Type**: JSON
+- **Interceptors**: Authentication and logging
+- **Error Handling**: Comprehensive Dio exception handling
+
+## Result Pattern
+
+### Using Result for API Responses
+All API calls return a `Result<BaseResponse<T>, String>`:
+
+```dart
+Future<Result<BaseResponse<UserModel>, String>> getUser({
+  required String userId,
+}) async {
+  return request(
+    requestType: RequestType.get,
+    path: ApiUrls.getUser,
+    queryParameters: {'id': userId},
+  );
+}
+```
+
+### Handling Results in Controllers
+Use the `when` method to handle success and failure cases:
+
+```dart
+Future<void> loadUser() async {
+  isLoading(true);
+  
+  final result = await _repository.getUser(userId: userId);
+  
+  result.when(
+    (response) {
+      // Handle success
+      if (response.data != null) {
+        user.value = UserModel.fromJson(response.data);
+      }
+    },
+    (error) {
+      // Handle error
+      errorMessage.value = error;
+      AppSnackBar.error(message: error);
+    },
+  );
+  
+  isLoading(false);
+}
+```
+
+## Error Handling
+
+### HTTP Status Code Handling
+The client service handles common HTTP status codes:
+
+```dart
+// 200 - Success (handled by BaseResponse.success)
+// 400 - Bad Request
+// 401 - Unauthorized  
+// 403 - Forbidden
+// 404 - Not Found
+// 422 - Unprocessable Entity (validation errors)
+// 500 - Internal Server Error
+```
+
+### Error Message Extraction
+Error messages are extracted from API responses:
+
+```dart
+// For 401, 400, 404: Uses 'error' field from response
+// For 422: Returns response as success for validation handling
+// For other errors: Uses BaseResponse.message
+// For network errors: Returns "No internet connection"
+```
+
+### Network Connectivity
+Always check connectivity before making requests:
+
+```dart
+if (await ConnectivityService.isConnected) {
+  // Make API request
+} else {
+  return Failure("No internet connection");
+}
+```
+
+## Base Response Structure
+
+### BaseResponse Class
+All API responses follow the `BaseResponse<T>` structure:
+
+```dart
+class BaseResponse<T> {
+  final bool success;
+  final String message;
+  final T? data;
+  final int? statusCode;
+  
+  // Factory constructor from API response
+  factory BaseResponse.fromResponse(dynamic response) {
+    // Parse response structure
+  }
+}
+```
+
+### Response Parsing
+Parse API responses consistently:
+
+```dart
+// Success response
+{
+  "success": true,
+  "message": "Operation successful",
+  "data": { /* actual data */ },
+  "statusCode": 200
+}
+
+// Error response  
+{
+  "success": false,
+  "message": "Error message",
+  "data": null,
+  "statusCode": 400
+}
+```
+
+## Interceptors
+
+### Authentication Interceptor
+Handle authentication tokens automatically:
+
+```dart
+class AuthInterceptor extends Interceptor {
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    // Add authentication headers
+    final token = Preferences.token;
+    if (token != null) {
+      options.headers['Authorization'] = 'Bearer $token';
+    }
+    handler.next(options);
+  }
+}
+```
+
+### Logging Interceptor
+Enable detailed logging in debug mode:
+
+```dart
+if (kDebugMode)
+  LogInterceptor(
+    request: true,
+    requestHeader: true,
+    requestBody: true,
+    responseHeader: true,
+    responseBody: true,
+    error: true,
+  )
+```
+
+## Data Models
+
+### Model Structure
+Create models for API responses:
+
+```dart
+class UserModel {
+  final String id;
+  final String name;
+  final String email;
+  
+  UserModel({
+    required this.id,
+    required this.name,
+    required this.email,
+  });
+  
+  factory UserModel.fromJson(Map<String, dynamic> json) {
+    return UserModel(
+      id: json['id'] ?? '',
+      name: json['name'] ?? '',
+      email: json['email'] ?? '',
+    );
+  }
+  
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'email': email,
+    };
+  }
+}
+```
+
+### List Response Models
+Handle list responses properly:
+
+```dart
+class UserListResponse {
+  final List<UserModel> users;
+  final int totalCount;
+  final int currentPage;
+  
+  UserListResponse({
+    required this.users,
+    required this.totalCount,
+    required this.currentPage,
+  });
+  
+  factory UserListResponse.fromJson(Map<String, dynamic> json) {
+    return UserListResponse(
+      users: (json['users'] as List?)
+          ?.map((e) => UserModel.fromJson(e))
+          .toList() ?? [],
+      totalCount: json['totalCount'] ?? 0,
+      currentPage: json['currentPage'] ?? 1,
+    );
+  }
+}
+```
+
+## Best Practices
+
+### 1. Repository Design
+- One repository per feature/domain
+- Extend `ClientService` for HTTP operations
+- Use descriptive method names
+- Handle all API operations for a feature
+
+### 2. Error Handling
+- Always use `Result` pattern for API calls
+- Provide meaningful error messages
+- Handle network connectivity issues
+- Log errors for debugging
+
+### 3. Data Parsing
+- Create models for all API responses
+- Use null-safe parsing
+- Validate required fields
+- Handle different response formats
+
+### 4. Performance
+- Use appropriate HTTP methods
+- Implement request caching when needed
+- Handle timeouts gracefully
+- Cancel requests when not needed
+
+### 5. Security
+- Use HTTPS for all requests
+- Implement proper authentication
+- Validate all input data
+- Handle sensitive data carefully
+
+### 6. Testing
+- Mock API responses in tests
+- Test error scenarios
+- Verify request parameters
+- Test response parsing
+
+## Common Patterns
+
+### Pagination
+```dart
+Future<Result<BaseResponse<PaginatedResponse<UserModel>>, String>> getUsers({
+  int page = 1,
+  int limit = 10,
+}) async {
+  return request(
+    requestType: RequestType.get,
+    path: ApiUrls.getUsers,
+    queryParameters: {
+      'page': page,
+      'limit': limit,
+    },
+  );
+}
+```
+
+### File Upload
+```dart
+Future<Result<BaseResponse<String>, String>> uploadFile({
+  required String filePath,
+  required String fieldName,
+}) async {
+  final formData = FormData.fromMap({
+    fieldName: await MultipartFile.fromFile(filePath),
+  });
+  
+  return request(
+    requestType: RequestType.post,
+    path: ApiUrls.uploadFile,
+    data: formData,
+  );
+}
+```
+
+### Query Parameters
+```dart
+Future<Result<BaseResponse<List<ItemModel>>, String>> searchItems({
+  String? query,
+  String? category,
+  double? minPrice,
+  double? maxPrice,
+}) async {
+  final queryParams = <String, dynamic>{};
+  
+  if (query != null) queryParams['q'] = query;
+  if (category != null) queryParams['category'] = category;
+  if (minPrice != null) queryParams['min_price'] = minPrice;
+  if (maxPrice != null) queryParams['max_price'] = maxPrice;
+  
+  return request(
+    requestType: RequestType.get,
+    path: ApiUrls.searchItems,
+    queryParameters: queryParams,
+  );
+}
+```

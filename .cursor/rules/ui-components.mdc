@@ -1,0 +1,126 @@
+---
+globs: *view*.dart,*widget*.dart,*theme*.dart
+description: UI components, theming, and responsive design guidelines
+---
+
+# UI Components and Theming Guidelines
+
+## Theme Usage
+The app uses a comprehensive theming system defined in [lib/core/themes/app_theme.dart](mdc:lib/core/themes/app_theme.dart).
+
+### Color Usage
+- Use `AppColors` constants for all colors
+- Never hardcode color values
+- Follow the established color scheme:
+  - `AppColors.primaryColor` for primary actions
+  - `AppColors.backgroundColor` for backgrounds
+  - `AppColors.primaryTextColor` for main text
+  - `AppColors.containerFillColor` for containers
+
+### Typography
+- Use predefined text styles from the theme
+- Follow Material 3 typography scale
+- Use `OpenSans` font family consistently
+- Text styles available:
+  - `Theme.of(context).textTheme.headlineLarge` for main headings
+  - `Theme.of(context).textTheme.titleMedium` for section headers
+  - `Theme.of(context).textTheme.bodyMedium` for body text
+  - `Theme.of(context).textTheme.labelMedium` for labels
+
+## Responsive Design
+Use `flutter_screenutil` for responsive sizing:
+
+```dart
+// Screen dimensions
+ScreenUtil().screenWidth
+ScreenUtil().screenHeight
+
+// Responsive sizing
+Container(
+  width: 100.w,    // 100 screen width units
+  height: 50.h,    // 50 screen height units
+  padding: EdgeInsets.all(16.r), // 16 responsive units
+  child: Text(
+    'Hello',
+    style: TextStyle(fontSize: 16.sp), // 16 responsive font size
+  ),
+)
+```
+
+## Component Guidelines
+
+### Buttons
+- Use `ElevatedButton` for primary actions
+- Use `OutlinedButton` for secondary actions
+- Use `TextButton` for text-only actions
+- All buttons use theme-defined styles
+
+### Input Fields
+- Use `TextFormField` with theme decoration
+- Include proper validation
+- Use appropriate keyboard types
+- Show clear error messages
+
+### Cards and Containers
+- Use `Card` widget with theme styling
+- Apply consistent border radius (12px)
+- Use proper elevation and shadows
+- Fill with `AppColors.containerFillColor`
+
+### AppBar
+- Use transparent background
+- Include proper title styling
+- Use theme-defined icon colors
+- Handle system overlay styles
+
+## Custom Widgets
+Create reusable widgets in the `lib/widgets/` directory:
+
+```dart
+class CustomWidget extends StatelessWidget {
+  const CustomWidget({
+    super.key,
+    required this.title,
+    this.onTap,
+  });
+  
+  final String title;
+  final VoidCallback? onTap;
+  
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      // Implementation
+    );
+  }
+}
+```
+
+## Screen Structure
+Follow this pattern for screens:
+
+```dart
+class FeatureView extends StatelessWidget {
+  const FeatureView({super.key});
+  
+  @override
+  Widget build(BuildContext context) {
+    return GetBuilder<FeatureController>(
+      builder: (controller) => Scaffold(
+        appBar: AppBar(title: Text('Title')),
+        body: _buildBody(context, controller),
+      ),
+    );
+  }
+  
+  Widget _buildBody(BuildContext context, FeatureController controller) {
+    // Screen content
+  }
+}
+```
+
+## Accessibility
+- Use semantic labels
+- Provide proper contrast ratios
+- Support screen readers
+- Include proper focus management
