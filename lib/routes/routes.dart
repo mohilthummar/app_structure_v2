@@ -11,15 +11,14 @@
 // All routes are defined in the [pages] list below, using the [getPage] helper.
 // -----------------------------------------------------------------------------
 
+import 'package:app_structure/features/auth/presentation/sign_in/sign_in_bindings.dart';
+import 'package:app_structure/features/auth/presentation/sign_in/sign_in_view.dart';
+import 'package:app_structure/features/auth/presentation/sign_up/sign_up_bindings.dart';
+import 'package:app_structure/features/auth/presentation/sign_up/sign_up_view.dart';
+import 'package:app_structure/features/auth/presentation/splash/splash_bindings.dart';
+import 'package:app_structure/features/auth/presentation/splash/splash_view.dart';
 import 'package:app_structure/routes/routes_name.dart';
-import 'package:app_structure/view/auth_flow/sign_in/sign_in_bindings.dart';
-import 'package:app_structure/view/auth_flow/sign_in/sign_in_view.dart';
-import 'package:app_structure/view/auth_flow/sign_up/sign_up_bindings.dart';
-import 'package:app_structure/view/auth_flow/sign_up/sign_up_view.dart';
-import 'package:app_structure/view/auth_flow/splash/splash_bindings.dart';
 import 'package:get/get.dart';
-
-import '../view/auth_flow/splash/splash_view.dart';
 
 // -----------------------------------------------------------------------------
 // Helper Function: getPage

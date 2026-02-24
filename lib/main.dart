@@ -1,16 +1,15 @@
+import 'package:app_structure/app.dart';
+import 'package:app_structure/bootstrap.dart';
+import 'package:app_structure/core/config/app_environment.dart';
+import 'package:app_structure/core/enums/common_enums.dart';
 import 'package:flutter/material.dart';
 
-import 'bootstrap.dart';
-import 'core/enums/common_enums.dart';
-import 'core/handler/app_environment.dart';
-import 'my_app.dart';
-
 void main() async {
-  /// 🧩 Inject the selected environment into the app's configuration
-  AppEnvironment.setEnvironment(EnvironmentType.development);
-
-  /// 🧱 Execute bootstrap logic (storage, Firebase, notifications, orientation, crashlytics, etc.)
+  /// 🧱 Bootstrap first (loads .env, binding, orientation, etc.)
   await bootstrap();
+
+  /// 🧩 Set environment after .env is loaded so baseUrl and flags are correct
+  AppEnvironment.setEnvironment(EnvironmentType.development);
 
   /// 🏁 Run the app
   runApp(const MyApp());
