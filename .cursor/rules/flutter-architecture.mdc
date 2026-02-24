@@ -10,61 +10,75 @@ This Flutter app follows a clean architecture pattern with clear separation of c
 
 ```
 lib/
-├── bootstrap.dart              # App initialization
 ├── main.dart                   # App entry point
-├── my_app.dart                 # Main app widget
+├── bootstrap.dart              # App initialization
+├── app.dart                    # Main app widget (GetMaterialApp)
 ├── core/                       # Core functionality
-│   ├── apis/                   # API service classes
-│   ├── controller/             # Base controllers
+│   ├── base/                   # Base controllers
+│   ├── config/                 # Environment, API URLs
+│   ├── constants/              # App constants (colors, strings, assets)
 │   ├── enums/                  # App-wide enums
 │   ├── extensions/             # Dart extensions
-│   ├── firebase/               # Firebase configuration
-│   ├── handler/                # App handlers (environment, etc.)
-│   ├── services/               # Core services
-│   ├── themes/                 # App theming
-│   ├── translations/           # Internationalization
+│   ├── network/                # HTTP client, interceptors, base response
+│   ├── services/               # Core services (connectivity, notifications)
+│   ├── theme/                  # App theming (styles, text)
+│   ├── types/                  # Domain-safe Result, Failure
 │   └── utils/                  # Utility functions
-├── data/                       # Data layer
-│   ├── constants/              # App constants
-│   ├── models/                 # Data models
-│   └── repositories/           # Data repositories
-├── packages/                   # Custom packages/widgets
 ├── routes/                     # Navigation configuration
-├── view/                       # UI layer (screens)
-│   └── auth_flow/              # Feature-based organization
-└── widgets/                    # Reusable UI components
+├── shared/                     # Shared across features
+│   ├── models/                 # Shared models (DropDownModel, etc.)
+│   ├── widgets/                # Reusable UI components
+│   └── packages/               # Custom packages
+└── features/                   # Feature modules
+    └── auth/
+        ├── domain/             # Pure business logic (entities, repo interfaces)
+        ├── data/               # Implementation (DTOs, datasources, repo impl)
+        └── presentation/       # UI + State (views, controllers, bindings)
 ```
 
 ## Architecture Principles
 
 ### 1. Clean Architecture Layers
-- **Presentation Layer**: `view/` and `widgets/` - UI components and screens
-- **Domain Layer**: `core/` - Business logic, controllers, and services
-- **Data Layer**: `data/` - Models, repositories, and API services
+- **Presentation Layer**: `features/<name>/presentation/` - UI, controllers, bindings per feature
+- **Domain Layer**: `features/<name>/domain/` - Entities and repository interfaces (pure Dart)
+- **Data Layer**: `features/<name>/data/` - Models/DTOs, datasources, repository implementations
+- **Core**: `core/` - Shared infrastructure (network, theme, utils, constants)
+- **Shared**: `shared/` - Reusable widgets, packages, and shared models
 
 ### 2. Feature-Based Organization
-Organize code by features rather than technical layers:
+Organize code by features with domain/data/presentation layers inside each:
 ```
-view/
-├── auth_flow/
-│   ├── sign_in/
-│   │   ├── sign_in_view.dart
-│   │   ├── sign_in_controller.dart
-│   │   ├── sign_in_bindings.dart
-│   │   └── components/
-│   └── sign_up/
-└── other_features/
+features/
+└── auth/
+    ├── domain/
+    │   ├── user.dart                    # Entity (pure Dart)
+    │   └── auth_repository.dart         # Repository interface
+    ├── data/
+    │   ├── user_model.dart              # DTO (fromJson, toEntity)
+    │   ├── auth_remote_datasource.dart  # API calls
+    │   └── auth_repository_impl.dart    # Repository impl (handles Result)
+    └── presentation/
+        ├── sign_in/
+        │   ├── sign_in_view.dart
+        │   ├── sign_in_controller.dart
+        │   └── sign_in_bindings.dart
+        └── shared/
+            └── otp_dialog.dart
 ```
 
 ### 3. Dependency Injection
-Use GetX bindings for dependency injection:
+Use GetX bindings for dependency injection (wire data → domain → presentation):
 ```dart
-class FeatureBindings extends Bindings {
-  @override
-  void dependencies() {
-    Get.lazyPut<FeatureController>(() => FeatureController());
-    Get.lazyPut<FeatureRepository>(() => FeatureRepository());
-  }
+class SignInBindings implements Bindings {
+ @override
+ void dependencies() {
+   // 1. Data Source
+   Get.lazyPut(() => AuthRemoteDataSource(Get.find<ApiClient>()));
+   // 2. Repository (inject data source, register as interface)
+   Get.lazyPut<AuthRepository>(() => AuthRepositoryImpl(Get.find()));
+   // 3. Controller (inject repository interface)
+   Get.lazyPut(() => SignInController(Get.find()));
+ }
 }
 ```
 
@@ -85,15 +99,35 @@ class FeatureBindings extends Bindings {
 - Example: `sign_in_bindings.dart`
 - Handle dependency injection for the feature
 
-### Models
+### Models/DTOs
 - Pattern: `{entity}_model.dart`
 - Example: `user_model.dart`
-- Include `fromJson` and `toJson` methods
+- Include `fromJson`, `toJson`, and `toEntity` methods
+- Lives in `features/<feature>/data/`
 
-### Repositories
+### Repository Interfaces
 - Pattern: `{feature}_repository.dart`
 - Example: `auth_repository.dart`
-- Handle data operations and API calls
+- Abstract class in `features/<feature>/domain/`
+- Returns `Future<Entity>` directly (not Result)
+
+### Repository Implementations
+- Pattern: `{feature}_repository_impl.dart`
+- Example: `auth_repository_impl.dart`
+- Implements domain interface in `features/<feature>/data/`
+- Handles Result internally using `result.fold`
+
+### Data Sources
+- Pattern: `{feature}_remote_datasource.dart`
+- Example: `auth_remote_datasource.dart`
+- Lives in `features/<feature>/data/`
+- Uses ClientService for HTTP calls
+
+### Domain Entities
+- Pattern: `{entity}.dart`
+- Example: `user.dart`
+- Pure Dart class in `features/<feature>/domain/`
+- No JSON methods, no Flutter/GetX imports
 
 ## Code Organization Guidelines
 
@@ -104,23 +138,26 @@ import 'package:flutter/material.dart';
 
 // 2. Third-party packages
 import 'package:get/get.dart';
-import 'package:dio/dio.dart';
 
 // 3. Internal imports (core)
 import 'package:app_structure/core/utils/validation_mixin.dart';
+import 'package:app_structure/core/constants/app_colors.dart';
 
-// 4. Internal imports (data)
-import 'package:app_structure/data/models/user_model.dart';
+// 4. Internal imports (shared)
+import 'package:app_structure/shared/widgets/app_button.dart';
 
-// 5. Internal imports (view)
-import 'package:app_structure/view/auth_flow/sign_in/sign_in_controller.dart';
+// 5. Internal imports (features - domain)
+import 'package:app_structure/features/auth/domain/auth_repository.dart';
+
+// 6. Internal imports (features - relative within same feature)
+import 'sign_in_controller.dart';
 ```
 
 ### 2. Class Structure
 ```dart
-class FeatureController extends BaseViewController {
-  // 1. Dependencies
-  final FeatureRepository _repository = FeatureRepository();
+class FeatureController extends GetxController {
+  // 1. Dependencies (injected via constructor)
+  final AuthRepository _repository;
   
   // 2. Form keys and controllers
   GlobalKey<FormState> formKey = GlobalKey<FormState>();
@@ -190,18 +227,23 @@ class FeatureView extends StatelessWidget {
 ## Constants and Configuration
 
 ### 1. App Constants
-Store all constants in [lib/data/constants/](mdc:lib/data/constants/):
+Store all constants in [lib/core/constants/](mdc:lib/core/constants/):
 - `app_colors.dart` - Color definitions
 - `app_strings.dart` - String constants
 - `app_assets.dart` - Asset paths
-- `app_dimensions.dart` - Size constants
-- `app_enums.dart` - Enum definitions
+- `constant.dart` - App-wide constants
+- `env_strings.dart` - Environment strings
 
-### 2. Environment Configuration
-Use [lib/core/handler/app_environment.dart](mdc:lib/core/handler/app_environment.dart) for environment-specific settings.
+### 2. Environment and .env
+- **Single .env file:** All envs use one `.env`; which values are used is decided by `EnvironmentType` in `main.dart`.
+- **Load order:** In `main.dart`, call `await bootstrap()` first (bootstrap loads `.env` via `flutter_dotenv`), then `AppEnvironment.setEnvironment(EnvironmentType.development)`, then `runApp()`. Never use env values before bootstrap has run.
+- **AppEnvironment** ([lib/core/config/app_environment.dart](mdc:lib/core/config/app_environment.dart)): `setEnvironment(EnvironmentType)`, `baseUrl` (from `BASE_URL_LOCAL`/`BASE_URL_DEV`/`BASE_URL_STAGING`/`BASE_URL_PROD`), `enableLogging`, `enableCrashlytics`. Reads via `dotenv`.
+- **ApiUrls** ([lib/core/config/api_url.dart](mdc:lib/core/config/api_url.dart)): Endpoint paths from `.env` (e.g. `EP_SIGN_IN`, `EP_SIGN_UP`). Used by datasources and [lib/core/network/client_service.dart](mdc:lib/core/network/client_service.dart).
+- **ClientService:** Dio `baseUrl` is `AppEnvironment.baseUrl` + API version. Do not use `BuildContext` after async gaps; guard with `context.mounted` in the view when showing dialogs after async calls.
 
-### 3. API Configuration
-Configure API endpoints in [lib/core/handler/api_url.dart](mdc:lib/core/handler/api_url.dart).
+### 3. .env Setup
+- Copy `.env.example` to `.env` (e.g. `make env-setup`) and fill in values. Never commit `.env`; it is in `.gitignore`.
+- `pubspec.yaml` includes `.env` in `flutter.assets`.
 
 ## Best Practices
 
@@ -211,25 +253,29 @@ Configure API endpoints in [lib/core/handler/api_url.dart](mdc:lib/core/handler/
 - Use `RxBool`, `RxString`, etc. for reactive variables
 - Always dispose controllers and text controllers
 
-### 2. Error Handling
+### 2. BuildContext and Async Gaps
+- Do not use `BuildContext` after an `await` in controllers (causes "use BuildContext across async gaps" lint).
+- For dialogs after async calls: have the controller return a `bool` (e.g. "show OTP dialog"); in the view, `await controller.action()` then `if (context.mounted && result) showDialog(...)`.
+
+### 3. Error Handling
 - Use consistent error handling patterns
 - Show user-friendly error messages
 - Log errors for debugging
 - Handle network errors gracefully
 
-### 3. Performance
+### 4. Performance
 - Use `const` constructors where possible
 - Implement proper disposal of resources
 - Use `GetBuilder` only when necessary
 - Optimize widget rebuilds
 
-### 4. Testing
+### 5. Testing
 - Write unit tests for controllers
 - Test business logic separately from UI
 - Mock external dependencies
 - Test error scenarios
 
-### 5. Documentation
+### 6. Documentation
 - Document public APIs
 - Use meaningful variable and method names
 - Add comments for complex logic

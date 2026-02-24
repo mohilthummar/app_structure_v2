@@ -1,31 +1,133 @@
-# This file configures the analyzer, which statically analyzes Dart code to
-# check for errors, warnings, and lints.
-#
-# The issues identified by the analyzer are surfaced in the UI of Dart-enabled
-# IDEs (https://dart.dev/tools#ides-and-editors). The analyzer can also be
-# invoked from the command line by running `flutter analyze`.
-
-# The following line activates a set of recommended lints for Flutter apps,
-# packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
+analyzer:
+  errors:
+    missing_return: error # func must return value → error if missing
+    missing_required_param: error # @required param not passed → error
+    dead_code: warning # unreachable code after return → warning
+    unused_import: warning # import not used anywhere → warning
+    unused_local_variable: warning # variable declared but never read → warning
+  exclude:
+    - "**/*.g.dart" # skip generated files (json_serializable, etc.)
+    - "**/*.freezed.dart" # skip freezed generated files
+    - "lib/shared/packages/**" # skip custom third-party packages
+
 linter:
-  # The lint rules applied to this project can be customized in the
-  # section below to disable rules from the `package:flutter_lints/flutter.yaml`
-  # included above or to enable additional rules. A list of all available lints
-  # and their documentation is published at https://dart.dev/lints.
-  #
-  # Instead of disabling a lint rule for the entire project in the
-  # section below, it can also be suppressed for a single line of code
-  # or a specific dart file by using the `// ignore: name_of_lint` and
-  # `// ignore_for_file: name_of_lint` syntax on the line or in the file
-  # producing the lint.
   rules:
-    # avoid_print: false  # Uncomment to disable the `avoid_print` rule
-    # prefer_single_quotes: true  # Uncomment to enable the `prefer_single_quotes` rule
+    # ── Style ──
+
+    prefer_single_quotes: true
+    # Use 'hello' not "hello"
+
+    always_use_package_imports: true
+    # Use: import 'package:app_structure/core/constants/app_colors.dart';
+    # Not:  import '../../core/constants/app_colors.dart';
+
+    prefer_const_constructors: true
+    # Use: const EdgeInsets.all(8)    Not: EdgeInsets.all(8)
+
+    prefer_const_declarations: true
+    # Use: const title = 'Hello';    Not: final title = 'Hello';
+
+    prefer_const_literals_to_create_immutables: true
+    # Use: const [1, 2, 3]           Not: [1, 2, 3] (when all elements are const)
+
+    prefer_final_locals: true
+    # Use: final name = 'John';      Not: var name = 'John'; (if never reassigned)
+
+    prefer_final_fields: true
+    # Use: final _repo = Repo();     Not: var _repo = Repo(); (if never reassigned)
+
+    sort_child_properties_last: true
+    # Put child: at the end of widget constructor params
+
+    use_full_hex_values_for_flutter_colors: true
+    # Use: Color(0xFF000000)          Not: Color(0x000000)
+
+    sized_box_for_whitespace: true
+    # Use: SizedBox(height: 10)       Not: Container(height: 10)
+
+    prefer_is_empty: true
+    # Use: list.isEmpty               Not: list.length == 0
+
+    prefer_is_not_empty: true
+    # Use: list.isNotEmpty             Not: list.length > 0
+
+    # ── Safety ──
+
+    avoid_print: true
+    # Use debugPrint() or logger, not print() — print leaks to production
+
+    avoid_empty_else: true
+    # Don't write: if (x) {} else {}  — remove empty else block
+
+    avoid_returning_null_for_future: true
+    # Don't return null from Future<void> — return nothing or Future.value()
+
+    cancel_subscriptions: true
+    # StreamSubscription must be cancelled in dispose/onClose to avoid leaks
+
+    close_sinks: true
+    # StreamController must be closed in dispose/onClose to avoid leaks
+
+    no_duplicate_case_values: true
+    # switch(x) { case 1: ... case 1: ... } — catches duplicate case
+
+    prefer_void_to_null: true
+    # Use: Future<void>               Not: Future<Null>
+
+    unnecessary_statements: true
+    # Catches: x + 1; (expression with no effect, likely a bug)
+
+    valid_regexps: true
+    # Catches invalid regex patterns at analysis time
+
+    # ── Clean Code ──
+
+    avoid_unnecessary_containers: true
+    # Use: Padding(...)               Not: Container(padding: ..., child: ...)
+
+    prefer_const_constructors_in_immutables: true
+    # If class is @immutable, constructor should be const
+
+    unnecessary_const: true
+    # Don't write: const Text(const 'hi') — inner const is redundant
+
+    unnecessary_new: true
+    # Don't write: new Text('hi')     — Dart 2+ doesn't need new
+
+    unnecessary_this: true
+    # Don't write: this.name = name;  — unless needed for disambiguation
+
+    unnecessary_string_interpolations: true
+    # Use: name                        Not: '$name' (when variable is already a string)
+
+    unnecessary_nullable_for_final_variable_declarations: true
+    # final String? x = 'hi'; → final String x = 'hi'; (not nullable if always assigned)
+
+    use_key_in_widget_constructors: true
+    # Widgets must accept Key: const MyWidget({super.key});
+
+    require_trailing_commas: true
+    # Forces trailing comma in multi-line params — cleaner git diffs
+    # Example: Text('hi', style: style,)  ← trailing comma
+
+    # ── Architecture Enforcement ──
+
+    implementation_imports: true
+    # Prevents importing /src/ of packages — use public API only
+
+    depend_on_referenced_packages: true
+    # Every imported package must be in pubspec.yaml
+
+    # ── Disabled (conflict with project style) ──
+
+    constant_identifier_names: false
+    # Allows: signInView = '/sign-in'  — Dart convention is camelCase for constants
+
+    library_private_types_in_public_api: false
+    # Allows: _AppTextFieldState in public widget — normal for StatefulWidget
 
 formatter:
-  trailing_commas: preserve
-
-# Additional information about this file can be found at
-# https://dart.dev/guides/language/analysis-options
+  page_width: 500 # max line length before auto-wrap
+  trailing_commas: preserve # don't auto-add/remove trailing commas on format
