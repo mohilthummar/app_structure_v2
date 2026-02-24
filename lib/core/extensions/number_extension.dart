@@ -19,7 +19,7 @@ extension NumberFormatting on int {
   /// Returns a string with comma separators following Indian format
   /// Example: 100000 becomes "1,00,000"
   String formatNumber() {
-    final format = NumberFormat("##,##,##,##0", "en_IN");
+    final format = NumberFormat('##,##,##,##0', 'en_IN');
     return format.format(this);
   }
 
@@ -28,7 +28,7 @@ extension NumberFormatting on int {
   /// Returns a string like "1K", "1M", "1B" for large numbers
   /// Example: 1000 becomes "1K", 1000000 becomes "1M"
   String toCompactFormat() {
-    return NumberFormat.compact(locale: "en-INR").format(this);
+    return NumberFormat.compact(locale: 'en-INR').format(this);
   }
 
   /// Checks if the number is positive
@@ -64,7 +64,7 @@ extension NumberDoubleFormatting on double {
   /// Returns a string with comma separators and decimal places
   /// Example: 100000.5 becomes "1,00,000.50"
   String formatNumber() {
-    final format = NumberFormat("##,##,##,##0.00", "en_IN");
+    final format = NumberFormat('##,##,##,##0.00', 'en_IN');
     return format.format(this);
   }
 
@@ -73,7 +73,7 @@ extension NumberDoubleFormatting on double {
   /// [decimals] - Number of decimal places to show
   /// Returns a formatted string with specified decimal places
   String formatNumberWithDecimals(int decimals) {
-    final format = NumberFormat("##,##,##,##0.${'0' * decimals}", "en_IN");
+    final format = NumberFormat("##,##,##,##0.${'0' * decimals}", 'en_IN');
     return format.format(this);
   }
 
@@ -81,7 +81,7 @@ extension NumberDoubleFormatting on double {
   ///
   /// Returns a string like "1.5K", "2.3M" for large numbers
   String toCompactFormat() {
-    return NumberFormat.compact(locale: "en-INR").format(this);
+    return NumberFormat.compact(locale: 'en-INR').format(this);
   }
 
   /// Rounds the double to specified decimal places
@@ -89,7 +89,7 @@ extension NumberDoubleFormatting on double {
   /// [decimals] - Number of decimal places to round to
   /// Returns a double rounded to specified decimal places
   double roundToDecimals(int decimals) {
-    double multiplier = pow(10.0, decimals).toDouble();
+    final double multiplier = pow(10.0, decimals).toDouble();
     return (this * multiplier).round() / multiplier;
   }
 
@@ -125,10 +125,10 @@ extension StringFormatting on String {
   /// Returns a formatted string or "0.00" if parsing fails
   String formatNumber() {
     try {
-      final format = NumberFormat("##,##,##,##0.00", "en_IN");
+      final format = NumberFormat('##,##,##,##0.00', 'en_IN');
       return format.format(double.parse(this));
     } catch (e) {
-      return "0.00";
+      return '0.00';
     }
   }
 
@@ -212,10 +212,10 @@ extension NumberCompactFormatting on String {
   String compactNumber() {
     // Convert number into double to be formatted
     // Default to zero if unable to do so
-    double doubleNumber = double.tryParse(this) ?? 0;
+    final double doubleNumber = double.tryParse(this) ?? 0;
 
     // Set number format to use
-    NumberFormat numberFormat = NumberFormat.compact(locale: "en-INR");
+    final NumberFormat numberFormat = NumberFormat.compact(locale: 'en-INR');
 
     return numberFormat.format(doubleNumber);
   }
@@ -225,8 +225,8 @@ extension NumberCompactFormatting on String {
   /// [locale] - The locale to use for formatting (e.g., "en-US", "en-INR")
   /// Returns a compact formatted string
   String compactNumberWithLocale(String locale) {
-    double doubleNumber = double.tryParse(this) ?? 0;
-    NumberFormat numberFormat = NumberFormat.compact(locale: locale);
+    final double doubleNumber = double.tryParse(this) ?? 0;
+    final NumberFormat numberFormat = NumberFormat.compact(locale: locale);
     return numberFormat.format(doubleNumber);
   }
 
@@ -234,8 +234,8 @@ extension NumberCompactFormatting on String {
   ///
   /// Returns a string like "₹1.2K", "$3.4M" for currency values
   String compactCurrency() {
-    double doubleNumber = double.tryParse(this) ?? 0;
-    NumberFormat currencyFormat = NumberFormat.compactCurrency(locale: "en-INR");
+    final double doubleNumber = double.tryParse(this) ?? 0;
+    final NumberFormat currencyFormat = NumberFormat.compactCurrency(locale: 'en-INR');
     return currencyFormat.format(doubleNumber);
   }
 }
@@ -258,9 +258,9 @@ extension NumFormatting on num {
   /// Returns a formatted string with appropriate decimal places
   String toIndianFormat() {
     if (this is int) {
-      return NumberFormat("##,##,##,##0", "en_IN").format(this);
+      return NumberFormat('##,##,##,##0', 'en_IN').format(this);
     } else {
-      return NumberFormat("##,##,##,##0.00", "en_IN").format(this);
+      return NumberFormat('##,##,##,##0.00', 'en_IN').format(this);
     }
   }
 
@@ -268,7 +268,7 @@ extension NumFormatting on num {
   ///
   /// Returns a string like "1K", "1.5M" for large numbers
   String toCompactFormat() {
-    return NumberFormat.compact(locale: "en-INR").format(this);
+    return NumberFormat.compact(locale: 'en-INR').format(this);
   }
 
   /// Checks if the number is within a specified range

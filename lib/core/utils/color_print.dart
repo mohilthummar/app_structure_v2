@@ -1,52 +1,49 @@
 import 'dart:io';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
-/// Utility functions for printing colored text to the console (Android only).
-///
-/// Usage:
-/// ```dart
-/// printRed('Error!');
-/// printGreen('Success!');
-/// printBlue('Info!');
-/// printError(type: 'Error', text: 'Something went wrong');
-/// ```
-///
-/// Note: Colors only appear on Android console. On other platforms, prints plain text.
-///
-/// For production logging, prefer a proper logging package.
-void printRed(dynamic text) => _printColoredMessage(text, '\x1B[91m');
+/// Utility class for printing colored text to the console
+class AppPrint {
+  AppPrint._();
 
-/// Prints text in green color (for success messages).
-void printGreen(dynamic text) => _printColoredMessage(text, '\x1B[92m');
+  /// Print info message in blue
+  static void info(dynamic text) {
+    _printColoredMessage('ℹ️ $text', '\x1B[94m');
+  }
 
-/// Prints text in yellow color (for warnings or info).
-void printYellow(dynamic text) => _printColoredMessage(text, '\x1B[93m');
+  /// Print success message in green
+  static void success(dynamic text) {
+    _printColoredMessage('✅ $text', '\x1B[92m');
+  }
 
-/// Prints text in blue color (for info messages).
-void printBlue(dynamic text) => _printColoredMessage(text, '\x1B[94m');
+  /// Print warning message in yellow
+  static void warning(dynamic text) {
+    _printColoredMessage('⚠️ $text', '\x1B[93m');
+  }
 
-/// Prints text in purple color.
-void printPurple(dynamic text) => _printColoredMessage(text, '\x1B[95m');
+  /// Print error message in red
+  static void error({required String type, required dynamic text}) {
+    _printColoredMessage('❌ $type: $text', '\x1B[91m');
+  }
 
-/// Prints text in white color.
-void printWhite(dynamic text) => _printColoredMessage(text, '\x1B[97m');
+  /// Print debug message in purple
+  static void debug(dynamic text) {
+    _printColoredMessage('🐛 $text', '\x1B[95m');
+  }
 
-/// Prints an error message with a specified type label.
-void printError({required dynamic type, required dynamic text}) => _printColoredMessage(' [1m$type: $text', '\x1B[51m\x1B[91m');
+  /// Print data message in cyan
+  static void data({required String type, required dynamic text}) {
+    _printColoredMessage('📊 $type: $text', '\x1B[96m');
+  }
 
-/// Prints a general message with a specified type label.
-void printMessage({required dynamic type, required dynamic text}) => _printColoredMessage(' [1m$type: $text', '\x1B[51m\x1B[96m');
+  /// Internal function to print colored messages based on platform
+  static void _printColoredMessage(dynamic text, String colorCode) {
+    if (!kDebugMode) return;
 
-/// Prints data with a specified type label.
-void printData({required dynamic type, required dynamic text}) => _printColoredMessage(' [1m$type:\n$text', '\x1B[7m');
-
-/// Internal function to print colored messages based on platform.
-/// On Android, uses ANSI color codes; on other platforms, prints plain text.
-void _printColoredMessage(dynamic text, String colorCode) {
-  if (Platform.isAndroid) {
-    debugPrint('$colorCode$text\x1B[0m', wrapWidth: 99999);
-  } else {
-    debugPrint(text.toString(), wrapWidth: 99999);
+    if (Platform.isAndroid) {
+      debugPrint('$colorCode$text\x1B[0m', wrapWidth: 99999);
+    } else {
+      debugPrint(text.toString(), wrapWidth: 99999);
+    }
   }
 }

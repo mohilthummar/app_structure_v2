@@ -40,7 +40,8 @@ Widget shimmerContainer({
   return Container(
     height: height,
     width: width,
-    decoration: decoration ??
+    decoration:
+        decoration ??
         BoxDecoration(
           borderRadius: borderRadius ?? BorderRadius.circular(8.0),
           color: Colors.grey,

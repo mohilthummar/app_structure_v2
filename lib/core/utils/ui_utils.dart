@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
 
-import 'package:app_structure/core/apis/result.dart';
+import 'package:app_structure/core/constants/app_colors.dart';
+import 'package:app_structure/core/storage/preferences.dart';
+import 'package:app_structure/core/types/result.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -12,9 +14,6 @@ import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
-
-import '../../data/constants/app_colors.dart';
-import 'utils.dart';
 
 /// Comprehensive utility class containing all UI-related utility functions.
 ///
@@ -94,18 +93,18 @@ class UiUtils {
   /// Initializes platform state and returns device information
   static Future<Map<String, String>> initPlatformState(String fcmToken) async {
     final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
-    RxString deviceId = "".obs;
-    RxString deviceName = "".obs;
-    RxString deviceType = "".obs;
+    final RxString deviceId = ''.obs;
+    final RxString deviceName = ''.obs;
+    final RxString deviceType = ''.obs;
     try {
       if (Platform.isAndroid) {
-        AndroidDeviceInfo androidDeviceInfo = (await deviceInfoPlugin.androidInfo);
+        final AndroidDeviceInfo androidDeviceInfo = (await deviceInfoPlugin.androidInfo);
         deviceId.value = androidDeviceInfo.id;
         deviceName.value = androidDeviceInfo.brand;
-        deviceType.value = "Android";
+        deviceType.value = 'Android';
       } else if (Platform.isIOS) {
-        IosDeviceInfo iosDeviceInfo = (await deviceInfoPlugin.iosInfo);
-        deviceId.value = iosDeviceInfo.identifierForVendor ?? "";
+        final IosDeviceInfo iosDeviceInfo = (await deviceInfoPlugin.iosInfo);
+        deviceId.value = iosDeviceInfo.identifierForVendor ?? '';
         deviceName.value = iosDeviceInfo.modelName;
         deviceType.value = iosDeviceInfo.systemName;
       }
@@ -114,19 +113,19 @@ class UiUtils {
       Preferences.deviceName = deviceName.value;
       Preferences.deviceToken = fcmToken;
 
-      debugPrint("device_name: ${deviceName.value}");
-      debugPrint("device_type: ${deviceType.value}");
-      debugPrint("device_id: ${deviceId.value}");
-      debugPrint("device_token: $fcmToken");
+      debugPrint('device_name: ${deviceName.value}');
+      debugPrint('device_type: ${deviceType.value}');
+      debugPrint('device_id: ${deviceId.value}');
+      debugPrint('device_token: $fcmToken');
     } catch (e) {
       debugPrint(e.toString());
     }
 
     return {
-      "device_id": deviceId.value,
-      "device_token": deviceId.value,
-      "device_name": deviceType.value,
-      "device_type": deviceType.value,
+      'device_id': deviceId.value,
+      'device_token': deviceId.value,
+      'device_name': deviceType.value,
+      'device_type': deviceType.value,
     };
   }
 
@@ -136,21 +135,21 @@ class UiUtils {
 
   /// Converts duration string to minutes format
   static String convertDurationToMinutes(String text) {
-    String data = '00:00:30';
-    List<String> splitData = data.toString().split(':');
-    int result = (int.parse(splitData[0].toString()) * 60) + int.parse(splitData[1].toString());
+    const String data = '00:00:30';
+    final List<String> splitData = data.toString().split(':');
+    final int result = (int.parse(splitData[0].toString()) * 60) + int.parse(splitData[1].toString());
     int duration = result;
     if (splitData[2].toString() != '0') {
       duration = result + 1;
     }
-    return "$duration Min";
+    return '$duration Min';
   }
 
   /// Changes date format to specified output format
   static String changeDateFormat({DateTime? date, String? outputFormat}) {
     if (date != null && outputFormat != null) {
-      DateFormat formatter = DateFormat(outputFormat);
-      String formatted = formatter.format(date);
+      final DateFormat formatter = DateFormat(outputFormat);
+      final String formatted = formatter.format(date);
       return formatted;
     }
     return 'N/A';
@@ -158,15 +157,15 @@ class UiUtils {
 
   /// Converts UTC datetime string to local datetime string
   static String utcToLocal(String utcDateTime) {
-    DateTime dateTime = DateTime.parse(utcDateTime).toLocal();
-    return DateFormat("yyyy-MM-dd HH:mm:ss").format(dateTime);
+    final DateTime dateTime = DateTime.parse(utcDateTime).toLocal();
+    return DateFormat('yyyy-MM-dd HH:mm:ss').format(dateTime);
   }
 
   /// Returns time ago string from a date string
   static String timeAgoSinceDate(String dateString, {bool numericDates = true}) {
-    DateTime dateUtc = DateTime.parse(dateString);
-    var dateTime = DateFormat("yyyy-MM-dd HH:mm:ss").parse(dateUtc.toString(), true);
-    DateTime date = dateTime.toLocal();
+    final DateTime dateUtc = DateTime.parse(dateString);
+    final dateTime = DateFormat('yyyy-MM-dd HH:mm:ss').parse(dateUtc.toString(), true);
+    final DateTime date = dateTime.toLocal();
     final date2 = DateTime.now();
     final difference = date2.difference(date);
 
@@ -210,7 +209,7 @@ class UiUtils {
   /// Picks an image from the specified source (gallery or camera)
   static Future<XFile?> pickImage(ImageSource source) async {
     try {
-      XFile? xFile = await _picker.pickImage(source: source, requestFullMetadata: false);
+      final XFile? xFile = await _picker.pickImage(source: source, requestFullMetadata: false);
       if (xFile != null) {
         return xFile;
       }
@@ -223,10 +222,10 @@ class UiUtils {
   /// Picks multiple images and returns them as base64 strings
   static Future<List<String>> pickMultipleImage() async {
     try {
-      List<XFile> xFile = await _picker.pickMultiImage();
+      final List<XFile> xFile = await _picker.pickMultiImage();
       if (xFile.isNotEmpty) {
-        List<String> images = xFile.map((e) {
-          String base64String = base64Encode(File(e.path).readAsBytesSync());
+        final List<String> images = xFile.map((e) {
+          final String base64String = base64Encode(File(e.path).readAsBytesSync());
           return 'data:image/png;base64,$base64String';
         }).toList();
         return images;
@@ -240,13 +239,13 @@ class UiUtils {
   /// Picks a file (currently supports PDF files)
   static Future<Result<PlatformFile, String>> pickFile() async {
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['pdf'], allowMultiple: false);
+      final FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['pdf'], allowMultiple: false);
       if (result != null) {
         return Success(result.files.first);
       }
-      return Failure("Please select a file");
+      return Failure('Please select a file');
     } catch (e) {
-      return Failure("Please select a file");
+      return Failure('Please select a file');
     }
   }
 
@@ -266,10 +265,10 @@ class UiUtils {
 
   /// Converts a ui.Image to base64 string
   static Future<String?> imageToBase64(ui.Image image) async {
-    ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
     if (byteData == null) return null;
-    Uint8List pngBytes = byteData.buffer.asUint8List();
-    String base64Image = base64Encode(pngBytes);
+    final Uint8List pngBytes = byteData.buffer.asUint8List();
+    final String base64Image = base64Encode(pngBytes);
     return base64Image;
   }
 

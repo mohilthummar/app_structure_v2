@@ -1,6 +1,6 @@
 import 'package:intl/intl.dart';
 
-import '../utils/ui_utils.dart';
+import 'package:app_structure/core/utils/ui_utils.dart';
 
 /// Extension on DateTime to provide convenient date formatting and manipulation methods
 /// Offers various date formatting options and utility functions for date calculations
@@ -21,8 +21,8 @@ extension DateExtension on DateTime {
   /// Returns a string in the format "2024-01-15"
   /// Ensures proper zero-padding for month and day values
   String toDate() {
-    String month = this.month >= 10 ? this.month.toString() : '0${this.month}';
-    String day = this.day >= 10 ? this.day.toString() : '0${this.day}';
+    final String month = this.month >= 10 ? this.month.toString() : '0${this.month}';
+    final String day = this.day >= 10 ? this.day.toString() : '0${this.day}';
     return '$year-$month-$day';
   }
 
@@ -31,8 +31,8 @@ extension DateExtension on DateTime {
   /// Returns the number of days difference (can be negative for past dates)
   /// Uses DateTime.difference() for accurate calculation
   int getDifference() {
-    DateTime currentDateTime = DateTime.now();
-    int days = difference(currentDateTime).inDays;
+    final DateTime currentDateTime = DateTime.now();
+    final int days = difference(currentDateTime).inDays;
     return days;
   }
 
@@ -41,7 +41,7 @@ extension DateExtension on DateTime {
   /// Returns a human-readable string like "1 day" or "5 days"
   /// Adds 1 to the difference for inclusive counting
   String getDifferenceWithDayOrDays() {
-    DateTime currentDateTime = DateTime.now();
+    final DateTime currentDateTime = DateTime.now();
     int days = difference(currentDateTime).inDays;
     days += 1; // Inclusive counting
 
@@ -69,8 +69,8 @@ extension DateExtension on DateTime {
   /// Adds 5 hours and 30 minutes to convert to IST
   /// Returns a formatted string like "15/01/2024 - 02:30 PM"
   String convertToISTFormat() {
-    DateTime istDateTime = add(const Duration(hours: 5, minutes: 30));
-    DateFormat dateFormat = DateFormat('dd/MM/yyyy - hh:mm a');
+    final DateTime istDateTime = add(const Duration(hours: 5, minutes: 30));
+    final DateFormat dateFormat = DateFormat('dd/MM/yyyy - hh:mm a');
     return dateFormat.format(istDateTime);
   }
 
@@ -78,7 +78,7 @@ extension DateExtension on DateTime {
   ///
   /// Returns true if the date is today, false otherwise
   bool get isToday {
-    DateTime now = DateTime.now();
+    final DateTime now = DateTime.now();
     return year == now.year && month == now.month && day == now.day;
   }
 
@@ -86,7 +86,7 @@ extension DateExtension on DateTime {
   ///
   /// Returns true if the date is yesterday, false otherwise
   bool get isYesterday {
-    DateTime yesterday = DateTime.now().subtract(const Duration(days: 1));
+    final DateTime yesterday = DateTime.now().subtract(const Duration(days: 1));
     return year == yesterday.year && month == yesterday.month && day == yesterday.day;
   }
 
@@ -108,7 +108,7 @@ extension DateExtension on DateTime {
   ///
   /// Returns the age in years as an integer
   int get age {
-    DateTime now = DateTime.now();
+    final DateTime now = DateTime.now();
     int age = now.year - year;
     if (now.month < month || (now.month == month && now.day < day)) {
       age--;
@@ -125,7 +125,7 @@ extension DateExtension on DateTime {
     } else if (isYesterday) {
       return 'Yesterday';
     } else {
-      int diff = getDifference();
+      final int diff = getDifference();
       if (diff > 0) {
         return '$diff days ago';
       } else if (diff < 0) {

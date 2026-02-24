@@ -1,11 +1,11 @@
 import 'dart:ui';
 
-import 'package:app_structure/data/constants/app_colors.dart';
+import 'package:app_structure/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../themes/app_style.dart';
-import '../themes/app_text.dart';
+import 'package:app_structure/core/theme/app_style.dart';
+import 'package:app_structure/core/theme/app_text.dart';
 
 /// A customizable loader overlay with blur and label.
 ///
