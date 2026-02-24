@@ -1,6 +1,5 @@
+import 'package:app_structure/core/utils/utils.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
-
-import '../utils/utils.dart';
 
 /// Service for checking network connectivity status
 /// Provides methods to determine if the device has an active internet connection
@@ -30,7 +29,7 @@ class ConnectivityService {
       final bool hasNoConnection = connectivityResults.contains(ConnectivityResult.none);
       return !hasNoConnection;
     } catch (e) {
-      printRed('ConnectivityService: Error checking connectivity - $e');
+      AppPrint.error(type: 'ConnectivityService: Error checking connectivity', text: e.toString());
       return false;
     }
   }
@@ -40,7 +39,7 @@ class ConnectivityService {
     try {
       return await Connectivity().checkConnectivity();
     } catch (e) {
-      printRed('ConnectivityService: Error getting connection types - $e');
+      AppPrint.error(type: 'ConnectivityService: Error getting connection types', text: e.toString());
       return [];
     }
   }
@@ -77,7 +76,7 @@ class ConnectivityService {
 
       return descriptions.join(', ');
     } catch (e) {
-      printRed('ConnectivityService: Error getting connection description - $e');
+      AppPrint.error(type: 'ConnectivityService: Error getting connection description', text: e.toString());
       return 'Unknown';
     }
   }

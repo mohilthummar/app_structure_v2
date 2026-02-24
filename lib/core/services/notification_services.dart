@@ -1,12 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:app_structure/core/utils/ui_utils.dart';
+import 'package:app_structure/core/utils/utils.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-
-import '../utils/utils.dart';
 
 /// Global instance for local notifications
 FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
@@ -50,8 +48,8 @@ class NotificationService {
     // Request FCM permissions and get device token
     await FirebaseMessaging.instance.requestPermission().then((value) {
       FirebaseMessaging.instance.getToken().then((token) {
-        printData(type: "FCM Token ------------>>> ", text: token);
-        deviceToken = token ?? "";
+        AppPrint.data(type: 'FCM Token', text: token);
+        deviceToken = token ?? '';
         UiUtils.initPlatformState(deviceToken);
       });
     });
@@ -71,10 +69,10 @@ class NotificationService {
   /// Initializes Firebase messaging and local notifications
   static void firebaseMessagingInit() async {
     // Android initialization settings
-    var initializationSettingsAndroid = const AndroidInitializationSettings('@drawable/ic_notification');
+    const initializationSettingsAndroid = AndroidInitializationSettings('@drawable/ic_notification');
 
     // iOS initialization settings
-    var initializationSettingsIOS = const DarwinInitializationSettings(
+    const initializationSettingsIOS = DarwinInitializationSettings(
       requestSoundPermission: true,
       requestBadgePermission: true,
       requestAlertPermission: true,
@@ -82,7 +80,7 @@ class NotificationService {
     );
 
     // Combined initialization settings
-    var initializationSettings = InitializationSettings(android: initializationSettingsAndroid, iOS: initializationSettingsIOS);
+    const initializationSettings = InitializationSettings(android: initializationSettingsAndroid, iOS: initializationSettingsIOS);
 
     // Initialize local notifications
     await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
@@ -96,7 +94,7 @@ class NotificationService {
   /// Handles notification tap events
   /// Called when user taps on a local notification
   static Future<dynamic> onSelectNotification(NotificationResponse notificationResponse) async {
-    printGreen("-=-=-=-=-=-=-> onSelectNotification <-=-=-=-=-=--=-");
+    AppPrint.success('-=-=-=-=-=-=-> onSelectNotification <-=-=-=-=-=--=-');
     if (notificationResponse.payload != null && notificationResponse.payload!.isNotEmpty) {
       navigation(notificationResponse.payload);
     }
@@ -114,7 +112,7 @@ class NotificationService {
 
     // Handle notifications when app is killed/terminated
     FirebaseMessaging.instance.getInitialMessage().then((RemoteMessage? message) async {
-      printGreen('-=-=-=-=-=-=-> getInitialMessage <-=-=-=-=-=--');
+      AppPrint.success('-=-=-=-=-=-=-> getInitialMessage <-=-=-=-=-=--=-');
       if (message != null) {
         Future.delayed(const Duration(seconds: 3), () => navigation(message.data));
       }
@@ -122,7 +120,7 @@ class NotificationService {
 
     // Handle notifications when app is in background
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage? message) {
-      printGreen("onMessageOpenedApp");
+      AppPrint.success('onMessageOpenedApp');
       if (message != null) {
         navigation(message.data);
       }
@@ -131,12 +129,12 @@ class NotificationService {
     // Handle notifications when app is in foreground
     FirebaseMessaging.onMessage.listen((RemoteMessage? message) async {
       if (message != null) {
-        printData(type: "Title", text: message.notification?.body);
+        AppPrint.data(type: 'Title', text: message.notification?.body);
         if (Platform.isAndroid) {
           showNotification(remoteMessage: message);
         }
       } else {
-        printError(type: "Fusion getMessage", text: 'message null');
+        AppPrint.error(type: 'Fusion getMessage', text: 'message null');
       }
 
       // Additional notification handling can be added here
@@ -156,7 +154,7 @@ class NotificationService {
   /// Shows notification on Android when app is in foreground
   static Future<void> showNotification({RemoteMessage? remoteMessage}) async {
     // Android notification details
-    AndroidNotificationDetails android = AndroidNotificationDetails(
+    final AndroidNotificationDetails android = AndroidNotificationDetails(
       channel.id,
       channel.name,
       channelDescription: channel.description,
@@ -168,7 +166,7 @@ class NotificationService {
     );
 
     // iOS notification details
-    DarwinNotificationDetails iOS = const DarwinNotificationDetails(
+    const DarwinNotificationDetails iOS = DarwinNotificationDetails(
       presentSound: true,
       presentAlert: true,
       presentBadge: true,
@@ -176,7 +174,7 @@ class NotificationService {
     );
 
     // Platform-specific notification details
-    NotificationDetails platform = NotificationDetails(android: android, iOS: iOS);
+    final NotificationDetails platform = NotificationDetails(android: android, iOS: iOS);
 
     // Show the notification
     await flutterLocalNotificationsPlugin.show(
@@ -201,8 +199,8 @@ class NotificationService {
       newPayload = payload;
     }
 
-    printGreen(newPayload);
-    printGreen(newPayload['type']);
+    AppPrint.success(newPayload);
+    AppPrint.success(newPayload['type']);
 
     // Route based on notification type
     switch (newPayload['type'].toString()) {
