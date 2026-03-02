@@ -194,6 +194,91 @@ lib/
 
 ---
 
+## 2.1 Environment & .env Setup
+
+**Goal:** All environment-specific values (base URLs, feature flags, endpoints) come from a single `.env` file, and the app always reads them after they are loaded.
+
+- **Single `.env` file**
+  - The repository commits `.env.example` as a template.
+  - Each developer creates a local `.env` (ignored by git) from that template.
+  - The same `.env` holds values for all environments; which set is used depends on `EnvironmentType`.
+
+- **How `.env` is loaded**
+  - `bootstrap.dart` is responsible for loading `.env` via `flutter_dotenv`:
+
+    ```dart
+    Future<void> bootstrap() async {
+      WidgetsFlutterBinding.ensureInitialized();
+
+      // Load .env first
+      await dotenv.load(fileName: '.env');
+
+      // Other bootstrap work (storage, Firebase, orientation, etc.)
+    }
+    ```
+
+  - `main.dart` must call `await bootstrap()` **before** setting the environment:
+
+    ```dart
+    void main() async {
+      // 1) Load .env and do bootstrap work
+      await bootstrap();
+
+      // 2) Now that dotenv is loaded, set the active environment
+      AppEnvironment.setEnvironment(EnvironmentType.development);
+
+      // 3) Start the app
+      runApp(const MyApp());
+    }
+    ```
+
+- **Environment selection**
+  - Environment is chosen in `main.dart` via:
+
+    ```dart
+    AppEnvironment.setEnvironment(EnvironmentType.development);
+    // or: .local, .staging, .production
+    ```
+
+  - `AppEnvironment.baseUrl` chooses one of:
+    - `BASE_URL_LOCAL`
+    - `BASE_URL_DEV`
+    - `BASE_URL_STAGING`
+    - `BASE_URL_PROD`
+  - Additional flags are read from `.env`, for example:
+    - `ENABLE_LOGGING`
+    - `ENABLE_CRASHLYTICS`
+
+- **ApiUrls and ClientService**
+  - `ApiUrls` reads endpoint paths from `.env` (e.g. `EP_SIGN_IN`, `EP_SIGN_UP`, `EP_VALIDATE_SIGN_IN_OTP`, etc.).
+  - `ClientService` configures Dio with:
+
+    ```dart
+    baseUrl: '${AppEnvironment.baseUrl}/${version ?? ApiUrls.apiV1}',
+    ```
+
+  - This ensures every HTTP request uses the correct base URL for the active environment.
+
+- **Makefile helper**
+  - There is a convenience target to create `.env` from the template:
+
+    ```bash
+    make env-setup
+    ```
+
+  - Behavior:
+    - If `.env` does **not** exist: copy `.env.example` → `.env` and print a helpful message.
+    - If `.env` already exists: print a notice and do nothing.
+
+- **Git rules**
+  - `.env` is **gitignored** and must never be committed.
+  - `.env.example` **is** committed and should be kept in sync whenever new env keys are added.
+
+**Summary rule:**  
+Always create `.env` from `.env.example` (e.g. `make env-setup`), fill in the values, and never read `AppEnvironment`/`ApiUrls` before `bootstrap()` has completed.
+
+---
+
 ## 3. Layer Rules and Dependencies
 
 ### Domain Layer (`features/<feature>/domain/`)
@@ -395,16 +480,16 @@ class UserModel {
 ### 6.4 Remote Datasource (`features/auth/data/auth_remote_datasource.dart`)
 
 ```dart
-import 'package:app_structure/core/network/client_service.dart';
 import 'package:app_structure/core/config/api_url.dart';
+import 'package:app_structure/core/network/client_service.dart';
+import 'package:app_structure/features/auth/data/user_model.dart';
+import 'package:app_structure/features/auth/domain/user.dart';
 
-class AuthRemoteDataSource {
-  final ClientService _clientService;
-
-  AuthRemoteDataSource(this._clientService);
-
-  Future<Map<String, dynamic>> signIn({required String mobileNumber}) async {
-    final response = await _clientService.request(
+/// Remote datasource - Handles API calls
+/// Extends ClientService so it can call `request` directly.
+class AuthRemoteDataSource extends ClientService {
+  Future<User> signIn({required String mobileNumber}) async {
+    final response = await request(
       requestType: RequestType.post,
       path: ApiUrls.signIn,
       data: {'mobileNumber': mobileNumber},
@@ -412,7 +497,9 @@ class AuthRemoteDataSource {
 
     return response.when(
       (success) {
-        if (success.data != null) return success.data as Map<String, dynamic>;
+        if (success.data != null) {
+          return UserModel.fromJson(success.data).toEntity();
+        }
         throw Exception(success.message);
       },
       (error) => throw Exception(error),
@@ -424,13 +511,12 @@ class AuthRemoteDataSource {
 ### 6.5 Repository Implementation (`features/auth/data/auth_repository_impl.dart`)
 
 ```dart
-import 'package:app_structure/core/types/failure.dart';
-import 'package:app_structure/core/types/result.dart';
-import '../domain/auth_repository.dart';
-import '../domain/user.dart';
-import 'auth_remote_datasource.dart';
-import 'user_model.dart';
+import 'package:app_structure/features/auth/data/auth_remote_datasource.dart';
+import 'package:app_structure/features/auth/domain/auth_repository.dart';
+import 'package:app_structure/features/auth/domain/user.dart';
 
+/// Repository implementation - Implements domain interface
+/// Handles mapping errors to exceptions and returns entities directly.
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource _remoteDataSource;
 
@@ -439,20 +525,10 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<User> signIn({required String mobileNumber}) async {
     try {
-      final json = await _remoteDataSource.signIn(mobileNumber: mobileNumber);
-      final userModel = UserModel.fromJson(json);
-      final result = Success<User>(userModel.toEntity());
-
-      return result.fold(
-        (failure) => throw Exception(failure.message),
-        (user) => user,
-      );
+      final user = await _remoteDataSource.signIn(mobileNumber: mobileNumber);
+      return user;
     } catch (e) {
-      final errorResult = Error<User>(ServerFailure(e.toString()));
-      return errorResult.fold(
-        (failure) => throw Exception(failure.message),
-        (user) => user,
-      );
+      throw Exception(e.toString());
     }
   }
 }
@@ -461,35 +537,91 @@ class AuthRepositoryImpl implements AuthRepository {
 ### 6.6 Controller (`features/auth/presentation/sign_in/sign_in_controller.dart`)
 
 ```dart
+import 'package:app_structure/core/storage/preferences.dart';
+import 'package:app_structure/core/utils/app_snack_bar.dart';
 import 'package:app_structure/features/auth/domain/auth_repository.dart';
+import 'package:app_structure/routes/routes_name.dart';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class SignInController extends GetxController {
-  final AuthRepository _repository;  // Injected, not created
+  final AuthRepository _repository; // Injected, not created
 
   SignInController(this._repository);
 
   GlobalKey<FormState> signInFormKey = GlobalKey<FormState>();
-  TextEditingController phoneNumberController = TextEditingController();
-  RxBool isLoading = false.obs;
 
-  Future<void> onSignIn(BuildContext context) async {
+  TextEditingController phoneNumberController = TextEditingController();
+  TextEditingController otpController = TextEditingController();
+
+  RxBool isLoading = false.obs;
+  RxBool isResendLoading = false.obs;
+
+  /// Returns true if sign-in succeeded and the OTP dialog should be shown.
+  Future<bool> onSignIn() async {
     if (signInFormKey.currentState?.validate() ?? false) {
+      FocusManager.instance.primaryFocus?.unfocus();
+
       isLoading.value = true;
+
       try {
-        await _repository.signIn(mobileNumber: phoneNumberController.text.trim());
+        await _repository.signIn(
+          mobileNumber: phoneNumberController.text.trim(),
+        );
+
         isLoading.value = false;
-        // Handle success (show dialog, navigate, etc.)
+        return true;
       } catch (e) {
         isLoading.value = false;
         AppSnackBar.error(message: e.toString());
+        return false;
       }
+    }
+    return false;
+  }
+
+  Future<void> onVerify() async {
+    isLoading.value = true;
+
+    try {
+      final user = await _repository.validateSignInOtp(
+        mobileNumber: phoneNumberController.text.trim(),
+        otp: otpController.text.trim(),
+      );
+
+      isLoading.value = false;
+      Get.back();
+      // Handle successful login
+      Preferences.user = user;
+      Preferences.isLogged = true;
+      Preferences.token = user.token;
+      Get.offAllNamed(RoutesName.signInView);
+    } catch (e) {
+      isLoading.value = false;
+      AppSnackBar.error(message: e.toString());
+    }
+  }
+
+  Future<void> onResend() async {
+    isResendLoading.value = true;
+
+    try {
+      await _repository.resendOtp(
+        mobileNumber: phoneNumberController.text.trim(),
+      );
+
+      isResendLoading.value = false;
+      AppSnackBar.success(message: 'OTP sent successfully');
+    } catch (e) {
+      isResendLoading.value = false;
+      AppSnackBar.error(message: e.toString());
     }
   }
 
   @override
   void onClose() {
     phoneNumberController.dispose();
+    otpController.dispose();
     super.onClose();
   }
 }
@@ -498,7 +630,6 @@ class SignInController extends GetxController {
 ### 6.7 Bindings (`features/auth/presentation/sign_in/sign_in_bindings.dart`)
 
 ```dart
-import 'package:app_structure/core/network/api_client.dart';
 import 'package:app_structure/features/auth/data/auth_remote_datasource.dart';
 import 'package:app_structure/features/auth/data/auth_repository_impl.dart';
 import 'package:app_structure/features/auth/domain/auth_repository.dart';
@@ -508,10 +639,10 @@ import 'sign_in_controller.dart';
 class SignInBindings implements Bindings {
   @override
   void dependencies() {
-    // 1. Data Source (ApiClient registered globally in app.dart)
-    Get.lazyPut(() => AuthRemoteDataSource(Get.find<ApiClient>()));
+    // 1. Data Source
+    Get.lazyPut(() => AuthRemoteDataSource());
 
-    // 2. Repository (register as interface type)
+    // 2. Repository (inject data source)
     Get.lazyPut<AuthRepository>(() => AuthRepositoryImpl(Get.find()));
 
     // 3. Controller (inject repository)
@@ -523,10 +654,21 @@ class SignInBindings implements Bindings {
 ### 6.8 View (`features/auth/presentation/sign_in/sign_in_view.dart`)
 
 ```dart
+import 'package:app_structure/core/theme/app_style.dart';
+import 'package:app_structure/core/theme/app_text.dart';
 import 'package:app_structure/core/mixins/validation_mixin.dart';
-import 'package:app_structure/shared/widgets/widgets.dart';
+import 'package:app_structure/core/constants/app_colors.dart';
+import 'package:app_structure/core/constants/app_strings.dart';
+import 'package:app_structure/features/auth/presentation/shared/otp_dialog.dart';
+import 'package:app_structure/features/auth/presentation/sign_in/sign_in_controller.dart';
+import 'package:app_structure/routes/routes_name.dart';
+import 'package:app_structure/shared/widgets/app_app_bar.dart';
+import 'package:app_structure/shared/widgets/app_button.dart';
+import 'package:app_structure/shared/widgets/app_text_field.dart';
+import 'package:app_structure/shared/widgets/screen_header.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
-import 'sign_in_controller.dart';
 
 class SignInView extends GetView<SignInController> with ValidationMixin {
   const SignInView({super.key});
@@ -534,19 +676,85 @@ class SignInView extends GetView<SignInController> with ValidationMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Form(
-        key: controller.signInFormKey,
-        child: Column(
-          children: [
-            AppTextField(
-              controller: controller.phoneNumberController,
-              validator: (value) => phoneValidator(value, 10),
-            ),
-            Obx(() => AppButton(
-              onPressed: () => controller.onSignIn(context),
-              isLoading: controller.isLoading.value,
-            )),
-          ],
+      appBar: const AppAppBar(showBack: false),
+      body: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.all(defaultPadding).copyWith(top: 0),
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        clipBehavior: Clip.antiAlias,
+        child: Form(
+          key: controller.signInFormKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Screen Header
+              const ScreenHeader(
+                title: AppStrings.signIn,
+                subtitle: AppStrings.pleaseEnterYourCredentialsToProceed,
+              ),
+
+              // Phone Text filed view
+              AppTextField(
+                controller: controller.phoneNumberController,
+                label: AppStrings.phoneNumber,
+                hintText: AppStrings.enterYourPhoneNumber,
+                keyboardType: TextInputType.phone,
+                validator: (value) {
+                  return phoneValidator(value, 10);
+                },
+              ),
+
+              36.verticalSpace,
+
+              // Sign in Button view
+              Obx(
+                () => AppButton(
+                  onPressed: () async {
+                    final shouldShowOtp = await controller.onSignIn();
+                    if (context.mounted && shouldShowOtp) {
+                      showDialog(
+                        context: context,
+                        builder: (dialogContext) => OtpDialog(
+                          otpController: controller.otpController,
+                          isLoading: controller.isLoading,
+                          isResendLoading: controller.isResendLoading,
+                          onResend: controller.onResend,
+                          onVerify: controller.onVerify,
+                        ),
+                      );
+                    }
+                  },
+                  label: AppStrings.signIn,
+                  isLoading: controller.isLoading.value,
+                ),
+              ),
+
+              12.verticalSpace,
+
+              // Did not have account view
+              const AppText(
+                AppStrings.doNotHaveAnAccount,
+                textColor: AppColors.darkGreyTextColor,
+                textSize: TextSize.small_12,
+                textWeight: TextWeight.w600,
+              ),
+
+              12.verticalSpace,
+
+              // Sign Up Text Button
+              InkWell(
+                onTap: () {
+                  Get.toNamed(RoutesName.signUpView);
+                },
+                child: const AppText(
+                  AppStrings.signUp,
+                  textColor: AppColors.primaryColor,
+                  textSize: TextSize.small_12,
+                  textWeight: TextWeight.w600,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
