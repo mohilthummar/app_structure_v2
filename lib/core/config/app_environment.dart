@@ -1,4 +1,4 @@
-import 'package:app_structure/core/enums/common_enums.dart';
+import 'package:app_structure/core/enums/environment_enums.dart';
 import 'package:app_structure/core/utils/color_print.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 

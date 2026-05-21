@@ -61,9 +61,6 @@ linter:
     avoid_empty_else: true
     # Don't write: if (x) {} else {}  — remove empty else block
 
-    avoid_returning_null_for_future: true
-    # Don't return null from Future<void> — return nothing or Future.value()
-
     cancel_subscriptions: true
     # StreamSubscription must be cancelled in dispose/onClose to avoid leaks
 

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:get/get.dart';
 
 import 'package:app_structure/core/constants/app_colors.dart';
+import 'package:app_structure/core/theme/app_typography.dart';
 
 /// Enum defining different text sizes available in the app
 /// Each size corresponds to a specific font size in logical pixels

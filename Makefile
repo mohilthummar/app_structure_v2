@@ -128,6 +128,15 @@ fix-dry: ## Preview auto-fixes without applying
 	@echo "$(BLUE)Previewing fixes...$(RESET)"
 	dart fix --dry-run
 
+verify: ## Full verification: pub get + fix + format-check + analyze + test
+	@echo "$(BLUE)Running full verification...$(RESET)"
+	flutter pub get
+	dart fix --apply
+	dart format --set-exit-if-changed .
+	flutter analyze
+	flutter test
+	@echo "$(GREEN)Verify passed.$(RESET)"
+
 # ============================
 # TEST
 # ============================

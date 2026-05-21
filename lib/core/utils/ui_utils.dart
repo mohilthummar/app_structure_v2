@@ -3,8 +3,7 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:app_structure/core/constants/app_colors.dart';
-import 'package:app_structure/core/storage/preferences.dart';
-import 'package:app_structure/core/types/result.dart';
+import 'package:app_structure/core/storage/local_storage.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -109,9 +108,18 @@ class UiUtils {
         deviceType.value = iosDeviceInfo.systemName;
       }
 
-      Preferences.deviceId = deviceId.value;
-      Preferences.deviceName = deviceName.value;
-      Preferences.deviceToken = fcmToken;
+      // Persist via the new LocalStorageService named accessors. Device info
+      // is also handled by DeviceInfoService in `core/services/`; prefer that
+      // for new code. This call is kept so legacy callers of
+      // `UiUtils.initPlatformState` keep working.
+      if (Get.isRegistered<LocalStorageService>()) {
+        await Get.find<LocalStorageService>().saveDeviceInfo(
+          deviceId: deviceId.value,
+          deviceType: deviceType.value,
+          deviceToken: fcmToken,
+          deviceName: deviceName.value,
+        );
+      }
 
       debugPrint('device_name: ${deviceName.value}');
       debugPrint('device_type: ${deviceType.value}');
@@ -236,16 +244,25 @@ class UiUtils {
     }
   }
 
-  /// Picks a file (currently supports PDF files)
-  static Future<Result<PlatformFile, String>> pickFile() async {
+  /// Picks a file (currently supports PDF files).
+  ///
+  /// Returns the selected `PlatformFile`, or `null` if the user cancelled
+  /// or the picker threw. Callers should treat null as "no file" and show
+  /// their own message; the picker no longer wraps in a `Result` type
+  /// since the skeleton's data flow uses exceptions for failures.
+  static Future<PlatformFile?> pickFile() async {
     try {
-      final FilePickerResult? result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['pdf'], allowMultiple: false);
+      final FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
+        allowMultiple: false,
+      );
       if (result != null) {
-        return Success(result.files.first);
+        return result.files.first;
       }
-      return Failure('Please select a file');
-    } catch (e) {
-      return Failure('Please select a file');
+      return null;
+    } catch (_) {
+      return null;
     }
   }
 
