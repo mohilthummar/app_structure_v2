@@ -4,23 +4,22 @@ library;
 ///* =>> Don't change any enum INDEX (Positions)
 
 /// ***********************************************************************************
-/// *                                  LOCAL ENUMS                                    *
+/// *                                COMMON UI ENUMS                                  *
 /// ***********************************************************************************
 
-///* APPLICATION ENVIRONMENT TYPES - USE IN API STATES
-enum EnvironmentType {
-  local(id: 0, label: 'Local', slug: 'local'),
-  development(id: 1, label: 'Development', slug: 'development'),
-  staging(id: 2, label: 'Q&A', slug: 'qa'),
-  production(id: 3, label: 'Production', slug: 'production');
+enum ButtonVariant { contained, outlined, light, dashed, text }
 
-  final int id;
-  final String label;
-  final String slug;
+enum ToastType { success, info, warning, error }
 
-  const EnvironmentType({required this.id, required this.label, required this.slug});
+enum ModalVariant { center, drawer }
 
-  static EnvironmentType fromSlug(String slug) {
-    return EnvironmentType.values.firstWhere((e) => e.slug == slug);
-  }
+enum InputSize { small, medium, large }
+
+enum CheckboxSize {
+  small(16),
+  medium(18),
+  large(20);
+
+  final double size;
+  const CheckboxSize(this.size);
 }

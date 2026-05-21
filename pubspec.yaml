@@ -51,6 +51,9 @@ dependencies:
   firebase_messaging: ^16.0.1
   flutter_local_notifications: ^19.4.1
   flutter_dotenv: ^6.0.0
+
+  # Secure key/value storage (auth + refresh + CSRF tokens)
+  flutter_secure_storage: ^9.2.4
   
 dev_dependencies:
   flutter_test:

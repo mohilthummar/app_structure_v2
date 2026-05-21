@@ -47,3 +47,4 @@ app.*.map.json
 # Environment file (contains secrets — NEVER commit)
 .env
 # .env.example is safe to commit (template only)
+CLAUDE.local.md

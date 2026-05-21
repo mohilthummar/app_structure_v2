@@ -61,6 +61,26 @@ class AppEnvironment {
     }
   }
 
+  // ── Web Origin (refresh-token Origin/Referer header) ──
+
+  /// Web app's origin for the active environment, sent as `Origin` + `Referer`
+  /// on endpoints that enforce `CORS_ALLOWED_ORIGINS` (e.g. refresh-token).
+  /// Browsers auto-send `Origin`; Flutter must do it manually.
+  static String get webOrigin => _instance._getWebOrigin();
+
+  String _getWebOrigin() {
+    switch (envType) {
+      case EnvironmentType.local:
+        return getEnvValue('APP_WEB_ORIGIN_LOCAL');
+      case EnvironmentType.development:
+        return getEnvValue('APP_WEB_ORIGIN_DEV');
+      case EnvironmentType.staging:
+        return getEnvValue('APP_WEB_ORIGIN_STAGING');
+      case EnvironmentType.production:
+        return getEnvValue('APP_WEB_ORIGIN_PROD');
+    }
+  }
+
   // ── Feature Flags ──
 
   /// Whether app is in debug mode (true for local/dev/staging, false for production)
