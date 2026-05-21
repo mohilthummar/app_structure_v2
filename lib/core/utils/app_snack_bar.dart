@@ -1,17 +1,21 @@
-import 'package:app_structure/core/constants/app_assets.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
+import 'package:app_structure/core/constants/app_assets.dart';
 import 'package:app_structure/core/constants/app_colors.dart';
+import 'package:app_structure/core/theme/app_dimensions.dart';
 import 'package:app_structure/core/theme/app_text.dart';
 
-/// Types of snackbars supported by [AppSnackBar].
+/// Snackbar types supported by [AppSnackBar].
 enum SnackBarType { success, info, warning, error }
 
 /// A utility for showing consistent, themed snackbars throughout the app.
+///
+/// All colors come from `AppColors`, all sizing from `AppDimensions`,
+/// typography from `AppText`. Never inline `Color(0xFF…)` or raw numbers.
 ///
 /// Usage:
 /// ```dart
@@ -19,18 +23,11 @@ enum SnackBarType { success, info, warning, error }
 /// AppSnackBar.error(message: 'Something went wrong.');
 /// AppSnackBar.info(message: 'This is an info message.');
 /// AppSnackBar.warning(message: 'This is a warning.');
-///
-/// // Custom usage:
-/// AppSnackBar.show(
-///   message: 'Custom message',
-///   type: SnackBarType.success,
-///   onPress: () { /* ... */ },
-///   buttonText: 'Undo',
-///   bottomPadding: false,
-/// );
 /// ```
 class AppSnackBar {
-  static RxBool isSnackBarOpen = false.obs;
+  AppSnackBar._();
+
+  static final RxBool isSnackBarOpen = false.obs;
 
   /// Closes any open snackbar.
   static void closeSnackbar() {
@@ -40,38 +37,42 @@ class AppSnackBar {
   }
 
   /// Shows a themed snackbar of the given [type].
-  /// See [SnackBarType] for available types.
-  static void show({required String message, SnackBarType type = SnackBarType.info, void Function()? onPress, String? buttonText, bool bottomPadding = true}) {
+  static void show({
+    required String message,
+    SnackBarType type = SnackBarType.info,
+    void Function()? onPress,
+    String? buttonText,
+    bool bottomPadding = true,
+  }) {
     closeSnackbar();
 
-    // Defaults
-    Color borderColor = Colors.grey;
-    Color backgroundColor = Colors.white;
-    Widget? icon;
-    String title = '';
+    final Color borderColor;
+    final Color backgroundColor;
+    final Widget icon;
+    final String title;
 
     switch (type) {
       case SnackBarType.success:
-        borderColor = const Color(0xFF32BC32);
-        backgroundColor = const Color(0xFFEAF8EA);
+        borderColor = AppColors.toastSuccess;
+        backgroundColor = AppColors.successBg;
         icon = const Icon(CupertinoIcons.check_mark_circled, color: AppColors.black);
         title = 'Success';
         break;
       case SnackBarType.info:
-        borderColor = const Color(0xFF47AFFF);
-        backgroundColor = const Color(0xFFEDF7FF);
+        borderColor = AppColors.toastInfo;
+        backgroundColor = AppColors.infoBg;
         icon = const Icon(CupertinoIcons.info, color: AppColors.black);
         title = 'Info';
         break;
       case SnackBarType.warning:
-        borderColor = const Color(0xFFFFB600);
-        backgroundColor = const Color(0xFFFFF8E5);
+        borderColor = AppColors.toastWarning;
+        backgroundColor = AppColors.warningBg;
         icon = SvgPicture.asset(AppAssets.icWarning, height: 18.h);
         title = 'Warning';
         break;
       case SnackBarType.error:
-        borderColor = const Color(0xFFFF3A30);
-        backgroundColor = const Color(0xFFFFEBEA);
+        borderColor = AppColors.toastError;
+        backgroundColor = AppColors.errorBg;
         icon = const Icon(CupertinoIcons.clear_circled, color: AppColors.black);
         title = 'Error';
         break;
@@ -80,8 +81,12 @@ class AppSnackBar {
     Get.snackbar(
       title,
       message,
-      messageText: AppText.multiLine(message, textWeight: TextWeight.w500, textColor: AppColors.black),
-      borderRadius: 10,
+      messageText: AppText.multiLine(
+        message,
+        textWeight: TextWeight.w500,
+        textColor: AppColors.black,
+      ),
+      borderRadius: AppDimensions.radius10,
       borderWidth: 1.4,
       shouldIconPulse: false,
       colorText: AppColors.black,
@@ -91,8 +96,11 @@ class AppSnackBar {
       borderColor: borderColor,
       backgroundColor: backgroundColor,
       icon: icon,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12).copyWith(top: 6),
-      margin: const EdgeInsets.symmetric(horizontal: 32).copyWith(bottom: bottomPadding ? 70 : 0),
+      padding: EdgeInsets.symmetric(
+        horizontal: AppDimensions.spacing16,
+        vertical: AppDimensions.spacing12,
+      ).copyWith(top: AppDimensions.spacing6),
+      margin: EdgeInsets.symmetric(horizontal: AppDimensions.spacing32).copyWith(bottom: bottomPadding ? AppDimensions.spacing72 : 0),
       mainButton: onPress == null
           ? null
           : TextButton(
@@ -109,37 +117,48 @@ class AppSnackBar {
     );
   }
 
-  /// Shows a success snackbar.
   static void success({required String message, bool bottomPadding = true}) => show(
     message: message,
     type: SnackBarType.success,
-    bottomPadding: bottomPadding, //
+    bottomPadding: bottomPadding,
   );
 
-  /// Shows an info snackbar.
-  static void info({required String message, void Function()? onPress, String? buttonText, bool bottomPadding = true}) => show(
+  static void info({
+    required String message,
+    void Function()? onPress,
+    String? buttonText,
+    bool bottomPadding = true,
+  }) => show(
     message: message,
     type: SnackBarType.info,
     onPress: onPress,
     buttonText: buttonText,
-    bottomPadding: bottomPadding, //
+    bottomPadding: bottomPadding,
   );
 
-  /// Shows a warning snackbar.
-  static void warning({required String message, void Function()? onPress, String? buttonText, bool bottomPadding = true}) => show(
+  static void warning({
+    required String message,
+    void Function()? onPress,
+    String? buttonText,
+    bool bottomPadding = true,
+  }) => show(
     message: message,
     type: SnackBarType.warning,
     onPress: onPress,
     buttonText: buttonText,
-    bottomPadding: bottomPadding, //
+    bottomPadding: bottomPadding,
   );
 
-  /// Shows an error snackbar.
-  static void error({required String message, void Function()? onPress, String? buttonText, bool bottomPadding = true}) => show(
+  static void error({
+    required String message,
+    void Function()? onPress,
+    String? buttonText,
+    bool bottomPadding = true,
+  }) => show(
     message: message,
     type: SnackBarType.error,
     onPress: onPress,
     buttonText: buttonText,
-    bottomPadding: bottomPadding, //
+    bottomPadding: bottomPadding,
   );
 }

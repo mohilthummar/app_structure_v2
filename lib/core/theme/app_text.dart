@@ -118,26 +118,20 @@ class AppText extends StatelessWidget {
     }
   }
 
-  /// Returns the appropriate TextStyle based on the textSize enum
-  /// Uses Flutter's built-in text theme as a base and applies custom font sizes
+  /// Returns the appropriate TextStyle based on the textSize enum.
+  /// Maps each `TextSize` value to an `AppTypography` token and applies
+  /// `.sp` scaling from `flutter_screenutil` at the call site.
   TextStyle? get textStyle {
-    switch (textSize) {
-      case TextSize.extraSmall_10:
-        return Theme.of(Get.context!).textTheme.bodySmall!.copyWith(fontSize: 10.sp);
-      case TextSize.small_12:
-        return Theme.of(Get.context!).textTheme.bodyMedium!.copyWith(fontSize: 12.sp);
-      case TextSize.medium_14:
-        return Theme.of(Get.context!).textTheme.bodyMedium!.copyWith(fontSize: 14.sp);
-      case TextSize.large_16:
-        return Theme.of(Get.context!).textTheme.bodyLarge!.copyWith(fontSize: 16.sp);
-      case TextSize.title_18:
-        return Theme.of(Get.context!).textTheme.titleMedium!.copyWith(fontSize: 18.sp);
-      case TextSize.largeTitle_20:
-        return Theme.of(Get.context!).textTheme.titleLarge!.copyWith(fontSize: 20.sp);
-      case TextSize.headline_24:
-        return Theme.of(Get.context!).textTheme.headlineSmall!.copyWith(fontSize: 24.sp);
-      default:
-        return Theme.of(Get.context!).textTheme.bodyMedium!.copyWith(fontSize: 12.sp);
-    }
+    final base = switch (textSize) {
+      TextSize.extraSmall_10 => AppTypography.xxs,
+      TextSize.small_12 => AppTypography.xs,
+      TextSize.medium_14 => AppTypography.sm,
+      TextSize.large_16 => AppTypography.md,
+      TextSize.title_18 => AppTypography.base,
+      TextSize.largeTitle_20 => AppTypography.lg,
+      TextSize.headline_24 => AppTypography.xl,
+      _ => AppTypography.xs,
+    };
+    return base.copyWith(fontSize: base.fontSize!.sp);
   }
 }
