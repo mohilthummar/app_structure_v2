@@ -1,33 +1,42 @@
-import 'package:app_structure/core/utils/color_print.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-/// 🧠 Shared bootstrap logic for app startup.
+import 'package:app_structure/core/constants/app_colors.dart';
+import 'package:app_structure/core/utils/color_print.dart';
+
+/// Shared boot logic. Called from `main.dart` BEFORE
+/// `InitialBinding().dependencies()`, so `.env` and Firebase are ready
+/// when the DI graph wires up.
 Future<void> bootstrap() async {
   try {
-    /// 🧱 Ensure widget binding is initialized before calling native platform code
     WidgetsFlutterBinding.ensureInitialized();
 
-    // Load single .env file (contains all environment configs)
+    // .env — single source of truth for env-specific URLs + flags.
     await dotenv.load(fileName: '.env');
 
-    /// 💾 Initialize GetStorage and preload local app data
-    // await GetStorage.init().then((_) async => await LocalStorage.readDataInfo());
+    // Firebase — eager init. Adds ~200-400 ms cold start; matches the
+    // decision in the skeleton spec.
+    await Firebase.initializeApp();
 
-    /// 🔥 Initialize Firebase (using env-specific options)
-    // await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    // Status bar style
+    SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(
+        statusBarColor: AppColors.white,
+        statusBarIconBrightness: Brightness.dark,
+        statusBarBrightness: Brightness.light,
+        systemNavigationBarColor: AppColors.white,
+        systemNavigationBarIconBrightness: Brightness.light,
+      ),
+    );
 
-    /// 🔔 Setup push notifications and local notifications
-    // await NotificationService.init();
-
-    /// 🔄 Lock the app orientation to portrait mode (both up & down)
-    await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
-
-    // 🧠 Start Firebase Crashlytics to track app-level errors in real-time
-    // if (AppEnvironment.enableCrashlytics) CrashAnalyticsManager.initialize();
+    // Lock to portrait
+    await SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
   } catch (e) {
-    /// 🔴 Error occurred during bootstrap process
     AppPrint.error(type: 'Bootstrap Error', text: e.toString());
   }
 }
