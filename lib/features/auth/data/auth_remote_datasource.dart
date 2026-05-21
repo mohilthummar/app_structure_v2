@@ -1,121 +1,45 @@
-import 'package:app_structure/core/config/api_url.dart';
-import 'package:app_structure/core/network/client_service.dart';
-import 'package:app_structure/features/auth/data/user_model.dart';
-import 'package:app_structure/features/auth/domain/user.dart';
+import 'package:app_structure/core/config/api_urls.dart';
+import 'package:app_structure/core/network/api_client.dart';
+import 'package:app_structure/features/auth/data/login_request.dart';
+import 'package:app_structure/features/auth/data/login_response.dart';
 
-/// Remote datasource - Handles API calls
-/// Returns JSON or throws exceptions
-class AuthRemoteDataSource extends ClientService {
-  Future<User> signUp({
-    required String name,
-    required String mobileNumber,
-    required String address,
-  }) async {
-    final response = await request(
-      requestType: RequestType.post,
-      path: ApiUrls.signUp,
-      data: {
-        'name': name,
-        'mobileNumber': mobileNumber,
-        'address': address,
-      },
-    );
+/// Thin wrapper over `ApiClient` for auth endpoints. Throws on
+/// `!response.success` — the repository's try/catch surfaces these as
+/// `Exception(e.toString())` for the controller layer.
+class AuthRemoteDataSource {
+  AuthRemoteDataSource(this._api);
 
-    return response.when(
-      (success) {
-        if (success.data != null) {
-          return UserModel.fromJson(success.data).toEntity();
-        }
-        throw Exception(success.message);
-      },
-      (error) => throw Exception(error),
+  final ApiClient _api;
+
+  Future<LoginResponse> login(LoginRequest request) async {
+    final res = await _api.post<LoginResponse>(
+      ApiUrls.login,
+      data: request.toJson(),
+      fromJson: (json) => LoginResponse.fromJson(json as Map<String, dynamic>),
     );
+    if (!res.success || res.data == null) {
+      throw Exception(res.error?.message ?? 'Login failed');
+    }
+    return res.data!;
   }
 
-  Future<User> validateSignUpOtp({
-    required String mobileNumber,
-    required String otp,
-  }) async {
-    final response = await request(
-      requestType: RequestType.post,
-      path: ApiUrls.validateSignUpOtp,
-      data: {
-        'mobileNumber': mobileNumber,
-        'otp': otp,
-      },
+  Future<void> forgotPassword(String email) async {
+    final res = await _api.put(
+      ApiUrls.forgotPassword,
+      data: {'email': email},
     );
-
-    return response.when(
-      (success) {
-        if (success.data != null) {
-          return UserModel.fromJson(success.data).toEntity();
-        }
-        throw Exception(success.message);
-      },
-      (error) => throw Exception(error),
-    );
+    if (!res.success) {
+      throw Exception(res.error?.message ?? 'Could not send reset link');
+    }
   }
 
-  Future<User> signIn({
-    required String mobileNumber,
-  }) async {
-    final response = await request(
-      requestType: RequestType.post,
-      path: ApiUrls.signIn,
-      data: {
-        'mobileNumber': mobileNumber,
-      },
+  Future<void> logout({String? deviceId}) async {
+    final res = await _api.post(
+      ApiUrls.logout,
+      data: deviceId != null ? {'device_id': deviceId} : null,
     );
-
-    return response.when(
-      (success) {
-        if (success.data != null) {
-          return UserModel.fromJson(success.data).toEntity();
-        }
-        throw Exception(success.message);
-      },
-      (error) => throw Exception(error),
-    );
-  }
-
-  Future<User> validateSignInOtp({
-    required String mobileNumber,
-    required String otp,
-  }) async {
-    final response = await request(
-      requestType: RequestType.post,
-      path: ApiUrls.validateSignInOtp,
-      data: {
-        'mobileNumber': mobileNumber,
-        'otp': otp,
-      },
-    );
-
-    return response.when(
-      (success) {
-        if (success.data != null) {
-          return UserModel.fromJson(success.data).toEntity();
-        }
-        throw Exception(success.message);
-      },
-      (error) => throw Exception(error),
-    );
-  }
-
-  Future<void> resendOtp({
-    required String mobileNumber,
-  }) async {
-    final response = await request(
-      requestType: RequestType.post,
-      path: ApiUrls.resendOtp,
-      data: {
-        'mobileNumber': mobileNumber,
-      },
-    );
-
-    response.when(
-      (success) => null,
-      (error) => throw Exception(error),
-    );
+    if (!res.success) {
+      throw Exception(res.error?.message ?? 'Logout failed');
+    }
   }
 }

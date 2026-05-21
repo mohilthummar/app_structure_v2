@@ -1,29 +1,18 @@
-import 'package:app_structure/features/auth/domain/user.dart';
+import 'package:app_structure/features/auth/data/login_request.dart';
+import 'package:app_structure/features/auth/data/login_response.dart';
+import 'package:app_structure/features/auth/data/user_model.dart';
 
-/// Repository interface - Returns entity directly (not Result)
-/// Repository implementation handles Result internally
+/// Auth domain interface. Controllers depend on THIS, never on
+/// `AuthRepositoryImpl` or `AuthRemoteDataSource`. The impl handles token /
+/// user persistence (SecureStorage + LocalStorage) inside its methods.
 abstract class AuthRepository {
-  Future<User> signUp({
-    required String name,
-    required String mobileNumber,
-    required String address,
-  });
+  Future<LoginResponse> login(LoginRequest request);
 
-  Future<User> validateSignUpOtp({
-    required String mobileNumber,
-    required String otp,
-  });
+  Future<void> forgotPassword(String email);
 
-  Future<User> signIn({
-    required String mobileNumber,
-  });
+  Future<void> logout({String? deviceId});
 
-  Future<User> validateSignInOtp({
-    required String mobileNumber,
-    required String otp,
-  });
+  Future<bool> isAuthenticated();
 
-  Future<void> resendOtp({
-    required String mobileNumber,
-  });
+  Future<UserModel?> getStoredUser();
 }

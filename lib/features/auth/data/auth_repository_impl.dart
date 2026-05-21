@@ -1,89 +1,77 @@
+import 'dart:convert';
+
+import 'package:app_structure/core/storage/local_storage.dart';
+import 'package:app_structure/core/storage/secure_storage.dart';
 import 'package:app_structure/features/auth/data/auth_remote_datasource.dart';
+import 'package:app_structure/features/auth/data/login_request.dart';
+import 'package:app_structure/features/auth/data/login_response.dart';
+import 'package:app_structure/features/auth/data/user_model.dart';
 import 'package:app_structure/features/auth/domain/auth_repository.dart';
-import 'package:app_structure/features/auth/domain/user.dart';
 
-/// Repository implementation - Implements domain interface
-/// Handles Result internally using result.fold and returns entity directly (or throws exception)
-/// Controller only receives the data, doesn't handle Result
+/// Concrete auth repository. Handles token storage (SecureStorage) and
+/// cached user (LocalStorage) inside the repo so feature controllers only
+/// know about typed input/output and exceptions.
 class AuthRepositoryImpl implements AuthRepository {
-  final AuthRemoteDataSource _remoteDataSource;
+  AuthRepositoryImpl(this._ds, this._secure, this._local);
 
-  AuthRepositoryImpl(this._remoteDataSource);
+  final AuthRemoteDataSource _ds;
+  final SecureStorageService _secure;
+  final LocalStorageService _local;
 
   @override
-  Future<User> signUp({
-    required String name,
-    required String mobileNumber,
-    required String address,
-  }) async {
+  Future<LoginResponse> login(LoginRequest request) async {
     try {
-      final user = await _remoteDataSource.signUp(
-        name: name,
-        mobileNumber: mobileNumber,
-        address: address,
-      );
-
-      return user;
+      final response = await _ds.login(request);
+      await _persist(response);
+      return response;
     } catch (e) {
       throw Exception(e.toString());
     }
   }
 
   @override
-  Future<User> validateSignUpOtp({
-    required String mobileNumber,
-    required String otp,
-  }) async {
+  Future<void> forgotPassword(String email) async {
     try {
-      final user = await _remoteDataSource.validateSignUpOtp(
-        mobileNumber: mobileNumber,
-        otp: otp,
-      );
-
-      return user;
+      await _ds.forgotPassword(email);
     } catch (e) {
       throw Exception(e.toString());
     }
   }
 
   @override
-  Future<User> signIn({
-    required String mobileNumber,
-  }) async {
+  Future<void> logout({String? deviceId}) async {
     try {
-      final user = await _remoteDataSource.signIn(mobileNumber: mobileNumber);
-
-      return user;
-    } catch (e) {
-      throw Exception(e.toString());
+      await _ds.logout(deviceId: deviceId);
+    } catch (_) {
+      // Tolerate API failure — local cleanup always runs.
     }
+    await _secure.clearAll();
+    await _local.clearUserData();
   }
 
   @override
-  Future<User> validateSignInOtp({
-    required String mobileNumber,
-    required String otp,
-  }) async {
-    try {
-      final user = await _remoteDataSource.validateSignInOtp(
-        mobileNumber: mobileNumber,
-        otp: otp,
-      );
+  Future<bool> isAuthenticated() => _secure.hasToken();
 
-      return user;
-    } catch (e) {
-      throw Exception(e.toString());
+  @override
+  Future<UserModel?> getStoredUser() async {
+    final raw = _local.userDataJson;
+    if (raw == null || raw.isEmpty) return null;
+    try {
+      return UserModel.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+    } catch (_) {
+      return null;
     }
   }
 
-  @override
-  Future<void> resendOtp({
-    required String mobileNumber,
-  }) async {
-    try {
-      await _remoteDataSource.resendOtp(mobileNumber: mobileNumber);
-    } catch (e) {
-      throw Exception(e.toString());
+  Future<void> _persist(LoginResponse r) async {
+    if (r.accessToken != null && r.accessToken!.isNotEmpty) {
+      await _secure.saveToken(r.accessToken!);
+    }
+    if (r.refreshToken != null && r.refreshToken!.isNotEmpty) {
+      await _secure.saveRefreshToken(r.refreshToken!);
+    }
+    if (r.user != null) {
+      await _local.saveUserData(jsonEncode(r.user!.toJson()));
     }
   }
 }
