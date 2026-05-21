@@ -13,11 +13,18 @@ alwaysApply: true
 - WHY comments, never WHAT. If code needs a "what" comment, rename instead.
 - API docs at module boundaries only, not every internal function.
 
+## Design tokens (never inline a literal)
+
+- Colors: use `AppColors.x` — never `Color(0xFF…)` or `Colors.red` etc. in feature/shared code.
+- Spacing / radius / shadows: use `AppDimensions.spacing*` / `AppDimensions.radius*` / `AppDimensions.*Shadow` — never raw doubles like `12.h` or `BorderRadius.circular(8)`. The shim `app_style.dart` (`defaultPadding`, `AppRadius.standard`, etc.) is allowed for backwards-compat but new code prefers `AppDimensions` directly.
+- Text style: use `AppText` widget or `AppTypography.x` tokens — never `TextStyle(fontSize: …, fontWeight: …)` inline.
+- UI state: use `ViewState` + `StateSwitch` for loading/empty/error/success branching — never roll a per-screen state enum.
+
 ## Naming (Dart / Flutter)
 
 - Files and directories: `snake_case.dart` (`sign_in_view.dart`, `auth_remote_datasource.dart`). One class per file.
 - Classes / enums / typedefs: `PascalCase`. Members / locals / parameters: `lowerCamelCase`. Constants: `lowerCamelCase` too (Dart convention; `constant_identifier_names` is disabled in `analysis_options.yaml`).
-- Suffixes are part of the convention: `*View`, `*Controller`, `*Bindings`, `*RepositoryImpl`, `*RemoteDataSource`, `*Model`. Repository interfaces have no suffix beyond `Repository`.
+- Suffixes are part of the convention: `*View`, `*Controller`, `*Bindings`, `*RepositoryImpl`, `*RemoteDataSource`, `*Model`, `*Request`, `*Response`. Repository interfaces have no suffix beyond `Repository`. There is no entity layer — `*Model` is the type used across data / domain / presentation.
 - Controller action methods: `on*` (`onSignIn`, `onVerify`, `onResend`). Validators: `*Validator`. Form keys: `*FormKey`. `TextEditingController` fields: `*Controller`.
 - Imports: prefer `package:app_structure/...` over relative imports across folders (enforced by `always_use_package_imports`). Relative is fine **only** within the same screen folder.
 

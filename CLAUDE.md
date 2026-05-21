@@ -17,14 +17,15 @@ All via Makefile (`make help` for the full list).
 
 ## Architecture rule (one line)
 
-Per-feature `domain/` (pure Dart interfaces+entities) ← `data/` (impl, DTOs, datasources) ← `presentation/` (views, GetX controllers, bindings). **Controllers never see `Result`/`Failure`/JSON** — repo impl `fold`s and throws, controller `try/catch`es and surfaces via `AppSnackBar`. Two `Result` types exist on purpose: [lib/core/network/](lib/core/network/) (transport) and [lib/core/types/](lib/core/types/) (domain).
+Per-feature `domain/` (abstract Repository interface) ← `data/` (datasource calls `ApiClient`, model with `fromJson`/`toJson`, repo impl persists via `SecureStorage`/`LocalStorage`) ← `presentation/` (binding, controller, view). **`*Model` is THE type across all layers — no entity / DTO split.** Controllers depend on the **interface** in `domain/`, never on impl / datasource / `ApiResponse`. Errors travel as `Exception`; UI state travels as `ViewState` via the shared [`StateSwitch`](lib/shared/widgets/state_switch.dart) widget. Full layer contract in [.claude/rules/architecture.md](.claude/rules/architecture.md).
 
 ## GetX gotchas
 
-- Bindings register **DataSource → Repository → Controller** with `Get.lazyPut`; always register repo as the **interface** (`Get.lazyPut<AuthRepository>(...)`).
-- Global services use `Get.put(..., permanent: true)` only in `LazyBinding` inside [lib/app.dart](lib/app.dart).
+- Global services register in [`lib/core/di/initial_binding.dart`](lib/core/di/initial_binding.dart): `Get.put(..., permanent: true)` for storage + `AuthController`, `Get.lazyPut(..., fenix: true)` for everything else. Called from `main.dart` before `runApp`.
+- Screen `Bindings` register `DataSource → Repository → Controller` with `Get.lazyPut`; always register repo as the **interface** (`Get.lazyPut<AuthRepository>(() => AuthRepositoryImpl(...))`).
+- Every controller exposes `state = ViewState.idle.obs` + `errorMessage = ''.obs` plus typed data Rx; views render via `StateSwitch`. Never roll a per-screen loading/empty/error pattern.
 - Views use `GetView<FooController>`; wrap reactive widgets in `Obx(() => ...)` at the smallest scope.
-- **No `BuildContext` across `await` in controllers.** Controllers return `Future<bool>`; views do `if (context.mounted && ok) showDialog(...)`. See `SignInController.onSignIn`.
+- **No `BuildContext` across `await` in controllers.** Controllers return `Future<bool>`; views do `if (context.mounted && ok) showDialog(...)`. See `LoginController.onLogin`.
 - Always `dispose()` `TextEditingController`s in `onClose()`.
 
 ## Lint quirks (analysis_options.yaml)

@@ -11,7 +11,7 @@ paths:
 
 - Never commit `.env`. New keys land in `.env.example` (placeholder values only) and `.env` simultaneously.
 - Never log tokens, OTPs, PII, or full request/response bodies. `enableLogging` from `.env` gates `pretty_dio_logger`; verify it's off for prod builds.
-- Auth tokens belong in the Dio interceptor / request headers, never in URLs or query strings. Refresh tokens, if any, go in secure storage (not raw `GetStorage`).
+- Auth tokens belong in the Dio interceptor / request headers, never in URLs or query strings. Access, refresh, and CSRF tokens MUST go through `SecureStorageService` (`flutter_secure_storage`) — never `LocalStorageService`/`GetStorage`. `AuthInterceptor` attaches Bearer + CSRF automatically; `TokenRefreshInterceptor` runs the single-flight 401 refresh — don't call refresh manually.
 - Treat every datasource response as untrusted: validate types and required fields in `fromJson` before constructing the entity. Don't pass raw `Map<String, dynamic>` past the data layer.
 - Deep links (`DeepLinkManager`) and push payloads are user-controlled input. Whitelist routes and parameter shapes before navigating; never `eval`-style execute.
 - File picker / image picker results: validate MIME, size, and extension before upload. Strip EXIF on images that may contain location data.
