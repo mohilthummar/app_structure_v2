@@ -6,8 +6,9 @@ disable-model-invocation: true
 allowed-tools:
   - Bash(git *)
   - Bash(gh *)
-  - Bash(npm run test *)
-  - Bash(npm run build)
+  - Bash(flutter test *)
+  - Bash(flutter analyze *)
+  - Bash(make *)
   - Read
   - Glob
   - Grep

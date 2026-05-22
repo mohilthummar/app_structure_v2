@@ -135,6 +135,13 @@ case "$EXTENSION" in
   rs)
     OUTPUT=$(cd "$ROOT" && cargo test 2>&1); EXIT=$?
     ;;
+  dart)
+    if command -v flutter >/dev/null 2>&1 && [ -f "$ROOT/pubspec.yaml" ]; then
+      OUTPUT=$(cd "$ROOT" && flutter test "$REL_TEST" 2>&1); EXIT=$?
+    else
+      exit 0
+    fi
+    ;;
   *)
     exit 0
     ;;
