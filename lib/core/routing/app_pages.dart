@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import 'package:app_structure/core/routing/auth_middleware.dart';
@@ -9,6 +8,10 @@ import 'package:app_structure/features/auth/presentation/login/login_bindings.da
 import 'package:app_structure/features/auth/presentation/login/login_view.dart';
 import 'package:app_structure/features/auth/presentation/splash/splash_bindings.dart';
 import 'package:app_structure/features/auth/presentation/splash/splash_view.dart';
+import 'package:app_structure/features/home/presentation/dashboard/dashboard_bindings.dart';
+import 'package:app_structure/features/home/presentation/dashboard/dashboard_view.dart';
+import 'package:app_structure/features/home/presentation/profile/profile_bindings.dart';
+import 'package:app_structure/features/home/presentation/profile/profile_view.dart';
 
 /// Single source of truth for every `GetPage`. `GetMaterialApp.getPages`
 /// reads this list. Navigate with `Get.toNamed`, `Get.offNamed`,
@@ -38,23 +41,15 @@ abstract class AppPages {
     // ── Protected ──────────────────────────────────────────────────────
     GetPage(
       name: RouteNames.home,
-      // Placeholder home — replace per project. Reads UserModel from
-      // AuthController and renders the logged-in user's name.
-      page: () => const _PlaceholderHomeView(),
+      page: () => const DashboardView(),
+      binding: DashboardBindings(),
+      middlewares: [AuthMiddleware()],
+    ),
+    GetPage(
+      name: RouteNames.profile,
+      page: () => const ProfileView(),
+      binding: ProfileBindings(),
       middlewares: [AuthMiddleware()],
     ),
   ];
-}
-
-class _PlaceholderHomeView extends StatelessWidget {
-  const _PlaceholderHomeView();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text('Home'),
-      ),
-    );
-  }
 }

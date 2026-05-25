@@ -38,6 +38,7 @@ dependencies:
   dropdown_button2: ^2.3.9
   device_info_plus: ^11.5.0
   cached_network_image: ^3.4.1
+  package_info_plus: ^8.1.2
 
   # Image of File picker
   image_picker: ^1.2.0
@@ -46,9 +47,17 @@ dependencies:
   path_provider: ^2.1.5
   image_cropper: ^9.1.0
 
+  # Deep links (iOS Universal Links + Android App Links)
+  app_links: ^6.3.2
+
+  # File path utilities (used by FileDownloadService for safe path joins)
+  path: ^1.9.0
+
   # Firebase
   firebase_core: ^4.1.0
   firebase_messaging: ^16.0.1
+  firebase_crashlytics: ^5.0.1
+  firebase_analytics: ^12.0.1
   flutter_local_notifications: ^19.4.1
   flutter_dotenv: ^6.0.0
 
@@ -73,6 +82,7 @@ flutter:
     - assets/fonts/
     - assets/icons/
     - assets/images/
+    - assets/i18n/
     # - assets/json/
     # - assets/lottie/
     # - assets/video/

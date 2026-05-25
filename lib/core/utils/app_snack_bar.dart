@@ -96,11 +96,11 @@ class AppSnackBar {
       borderColor: borderColor,
       backgroundColor: backgroundColor,
       icon: icon,
-      padding: EdgeInsets.symmetric(
+      padding: const EdgeInsets.symmetric(
         horizontal: AppDimensions.spacing16,
         vertical: AppDimensions.spacing12,
       ).copyWith(top: AppDimensions.spacing6),
-      margin: EdgeInsets.symmetric(horizontal: AppDimensions.spacing32).copyWith(bottom: bottomPadding ? AppDimensions.spacing72 : 0),
+      margin: const EdgeInsets.symmetric(horizontal: AppDimensions.spacing32).copyWith(bottom: bottomPadding ? AppDimensions.spacing72 : 0),
       mainButton: onPress == null
           ? null
           : TextButton(

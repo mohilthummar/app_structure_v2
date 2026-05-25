@@ -2,7 +2,7 @@
 /// debounce intervals, default page sizes.
 ///
 /// Don't put colors, asset paths, or copy here — those live in `app_colors`,
-/// `app_assets`, `app_strings`.
+/// `app_assets`, and `core/i18n/i18n_keys.dart` (translatable strings).
 abstract class AppConstants {
   static const String appName = 'app_structure';
 

@@ -1,0 +1,22 @@
+{
+  "app.name": "App Structure",
+
+  "auth.signIn": "साइन इन",
+  "auth.signUp": "साइन अप",
+  "auth.email": "ईमेल",
+  "auth.password": "पासवर्ड",
+  "auth.forgotPassword": "पासवर्ड भूल गए?",
+  "auth.verify": "सत्यापित करें",
+  "auth.resendCode": "कोड फिर भेजें",
+
+  "common.cancel": "रद्द करें",
+  "common.save": "सेव करें",
+  "common.retry": "पुनः प्रयास करें",
+  "common.loading": "लोड हो रहा है…",
+  "common.error": "कुछ गलत हो गया",
+
+  "home.logout": "लॉग आउट",
+
+  "settings.theme": "थीम",
+  "settings.language": "भाषा"
+}

@@ -45,5 +45,33 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+
+	<!-- ───────── Permission usage strings ─────────
+	     iOS will REJECT the app at runtime if any framework requests a
+	     protected resource without a matching *UsageDescription key.
+	     Customise the strings before shipping — they're shown to users
+	     verbatim in the permission prompt. -->
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs camera access to take photos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>This app needs photo library access to pick images.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This app needs permission to save images to your photo library.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>This app needs microphone access for audio features.</string>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>This app needs access to your documents to save downloaded files.</string>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>This identifier will be used to deliver personalized ads to you.</string>
+
+	<!-- ───────── Downloaded files visible in Files app ─────────
+	     Together these make the app's Documents/ folder appear in the
+	     iOS Files app under "On My iPhone", so users can find files
+	     saved via FileDownloadService.DownloadDestination.appDocuments.
+	     Remove both if you don't want downloads to be user-visible. -->
+	<key>UIFileSharingEnabled</key>
+	<true/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
 </dict>
 </plist>

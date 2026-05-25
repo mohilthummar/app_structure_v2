@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 
-import 'package:app_structure/core/constants/app_strings.dart';
+import 'package:app_structure/core/controllers/locale_controller.dart';
+import 'package:app_structure/core/controllers/theme_controller.dart';
+import 'package:app_structure/core/i18n/app_translations.dart';
+import 'package:app_structure/core/i18n/i18n_keys.dart';
 import 'package:app_structure/core/routing/app_pages.dart';
 import 'package:app_structure/core/routing/route_names.dart';
+import 'package:app_structure/core/services/analytics_service.dart';
 import 'package:app_structure/core/theme/app_theme.dart';
 import 'package:app_structure/core/utils/stretch_scroll_behavior.dart';
 
@@ -13,17 +17,27 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final analytics = Get.find<AnalyticsService>();
+    final translations = Get.find<AppTranslations>();
+    final localeController = Get.find<LocaleController>();
+    final themeController = Get.find<ThemeController>();
+
     return ScreenUtilInit(
       designSize: const Size(360, 690),
       builder: (context, child) => GetMaterialApp(
-        title: AppStrings.appName,
-        themeMode: ThemeMode.light,
+        title: I18n.appName.tr,
+        themeMode: themeController.mode.value,
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         debugShowCheckedModeBanner: false,
         scrollBehavior: ScrollBehaviorModified(),
         getPages: AppPages.pages,
         initialRoute: RouteNames.splash,
+        navigatorObservers: [analytics.observer],
+        translations: translations,
+        locale: localeController.currentLocale.value,
+        fallbackLocale: AppTranslations.fallbackLocale,
+        supportedLocales: AppTranslations.supportedLocales,
         builder: (context, child) {
           final mq = MediaQuery.of(context);
           final scaler = mq.textScaler.clamp(

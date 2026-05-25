@@ -3,13 +3,17 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'package:app_structure/core/theme/app_dimensions.dart';
 
-/// Backward-compatibility shim over `AppDimensions`.
+/// Convenience layer over `AppDimensions`. Both APIs are valid:
 ///
-/// New code should use `AppDimensions` directly (e.g. `AppDimensions.spacing14.h`).
-/// Existing call sites that consume `defaultPadding`, `defaultRadius`,
-/// `AppRadius.standard`, `AppEdgeInsets.all`, etc. continue to work — the
-/// values they receive now come from the `AppDimensions` token scale, so
-/// changing a token in one place propagates everywhere.
+/// * `AppDimensions.spacing14.h` — fine-grained token, use when you need
+///   a specific scale step (e.g. `spacing4`, `spacing20`).
+/// * `defaultPadding` / `AppRadius.standard` / `AppEdgeInsets.all` —
+///   shortcut for the most common values across the app. All resolve to
+///   `AppDimensions.*` internally, so a single edit there propagates.
+///
+/// Pick whichever reads more naturally at the call site — there is no
+/// "old vs new" split. Add a new shortcut only when ≥3 places use the
+/// same value.
 
 double get defaultPadding => AppDimensions.spacing14.h;
 double get defaultRadius => AppDimensions.radius10.r;

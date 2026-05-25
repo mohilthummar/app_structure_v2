@@ -35,7 +35,7 @@ class ScreenHeader extends StatelessWidget {
                   textColor: AppColors.primaryTextColor,
                 ),
               ),
-              if (action != null) action!,
+              ?action,
             ],
           ),
           if (subtitle != null) ...[

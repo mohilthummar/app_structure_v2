@@ -29,11 +29,6 @@ class ApiUrls {
   static String get userDetails => _env.getEnvValue('EP_USER_DETAILS');
   static String get newFeatureDetails => _env.getEnvValue('EP_NEW_FEATURE_DETAILS');
 
-  /// ── Legacy v2 template endpoints (kept for backwards compat with any
-  /// projects that already use them; safe to remove if unused). ──
-  static String get signUp => _env.getEnvValue('EP_SIGN_UP');
-  static String get signIn => _env.getEnvValue('EP_SIGN_IN');
-  static String get validateSignUpOtp => _env.getEnvValue('EP_VALIDATE_SIGN_UP_OTP');
-  static String get validateSignInOtp => _env.getEnvValue('EP_VALIDATE_SIGN_IN_OTP');
-  static String get resendOtp => _env.getEnvValue('EP_RESEND_OTP');
+  /// ── Home / dashboard ──
+  static String get dashboardList => _env.getEnvValue('EP_DASHBOARD_LIST');
 }

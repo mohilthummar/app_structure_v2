@@ -13,7 +13,7 @@ All via Makefile (`make help` for the full list).
 
 ## Boot order (don't reorder)
 
-`main.dart`: `await bootstrap()` (loads `.env`) → `AppEnvironment.setEnvironment(...)` → `runApp(const MyApp())`. Reading `AppEnvironment` or `ApiUrls` before bootstrap awaits throws unloaded-dotenv. Single `.env`; active values picked by `EnvironmentType` in code, not flavors.
+`main.dart` wraps `runApp` in `runZonedGuarded` and calls `bootstrap(environment: EnvironmentType.development)`. All boot work lives in `bootstrap.dart`: `WidgetsFlutterBinding` → `AppErrorHandler.init()` → `dotenv.load` → `AppEnvironment.setEnvironment` → guarded `Firebase.initializeApp` → system chrome → `InitialBinding().dependencies()` → `LocalStorageService.init()`. Reading `AppEnvironment` or `ApiUrls` before `bootstrap` awaits throws unloaded-dotenv. Firebase init is guarded: missing `google-services.json` / `GoogleService-Info.plist` is logged and boot continues — Crashlytics/Analytics no-op until config is added. Single `.env`; active values picked by `EnvironmentType` in code, not flavors.
 
 ## Architecture rule (one line)
 
@@ -21,12 +21,22 @@ Per-feature `domain/` (abstract Repository interface) ← `data/` (datasource ca
 
 ## GetX gotchas
 
-- Global services register in [`lib/core/di/initial_binding.dart`](lib/core/di/initial_binding.dart): `Get.put(..., permanent: true)` for storage + `AuthController`, `Get.lazyPut(..., fenix: true)` for everything else. Called from `main.dart` before `runApp`.
+- Global services register in [`lib/core/di/initial_binding.dart`](lib/core/di/initial_binding.dart). **Permanent** (survive logout): storage, telemetry (Crashlytics + Analytics), connectivity, deep-link + notification, i18n (`AppTranslations`, `LocaleController`), `ThemeController`, `AuthController`. **Lazy + fenix**: `AppInfoService`, `PermissionService`, `DeviceInfoService`, `ApiClient`, `AuthRemoteDataSource`, `AuthRepositoryImpl`.
+- Feature controllers extend [`BaseController`](lib/core/base/base_controller.dart) (`state`, `errorMessage`, `runGuarded<T>`) — cuts ~10 LOC per `on*` action. Plain `GetxController` only when there's no async state machine.
 - Screen `Bindings` register `DataSource → Repository → Controller` with `Get.lazyPut`; always register repo as the **interface** (`Get.lazyPut<AuthRepository>(() => AuthRepositoryImpl(...))`).
-- Every controller exposes `state = ViewState.idle.obs` + `errorMessage = ''.obs` plus typed data Rx; views render via `StateSwitch`. Never roll a per-screen loading/empty/error pattern.
-- Views use `GetView<FooController>`; wrap reactive widgets in `Obx(() => ...)` at the smallest scope.
+- Views use `GetView<FooController>`; render data branches via `StateSwitch` reading `controller.state.value`. Wrap reactive widgets in `Obx(() => ...)` at the smallest scope.
 - **No `BuildContext` across `await` in controllers.** Controllers return `Future<bool>`; views do `if (context.mounted && ok) showDialog(...)`. See `LoginController.onLogin`.
 - Always `dispose()` `TextEditingController`s in `onClose()`.
+
+## i18n + theme
+
+- Every visible string goes through `I18n.<key>.tr` (`lib/core/i18n/i18n_keys.dart`). Adding a key edits each `assets/i18n/<lang>.json` AND `i18n_keys.dart`. Switch language via `Get.find<LocaleController>().setLocale(...)`.
+- Theme switches via `Get.find<ThemeController>().setMode(ThemeMode.dark/light/system)`. `AppTheme._baseTheme` is brightness-aware — adding a new themed surface requires both light + dark tokens in `AppColors`.
+
+## Errors + logging
+
+- Uncaught errors are captured by `AppErrorHandler` (FlutterError, PlatformDispatcher, runZonedGuarded) and routed through `AppLogger.error` → `errorReportHook` → Crashlytics (when wired).
+- In code, call `AppLogger.{debug, info, success, warning, error, data}` — never `print()`. `AppLogger.error(msg, error: e, stackTrace: st, tag: '...')` is the canonical error log.
 
 ## Lint quirks (analysis_options.yaml)
 
@@ -35,6 +45,8 @@ Per-feature `domain/` (abstract Repository interface) ← `data/` (datasource ca
 ## Don'ts
 
 - Don't import `data/` from controllers/views. Import the domain interface; the binding wires the impl.
-- Don't put JSON in domain entities. `*_model.dart` in `data/` has `fromJson`/`toEntity()`.
+- Don't add an entity / DTO split. `*Model` (in `data/`) is THE type across all layers, with `fromJson` / `toJson` / `copyWith`. Domain holds only the abstract Repository interface and references the `*Model` types from `data/`.
 - Don't `Get.put` in screen bindings (use `Get.lazyPut`). Don't `Navigator.of(context)` (use `Get.toNamed`/`back`/`offAllNamed`).
+- Don't inline user-visible strings — use `I18n.<key>.tr`. Don't inline colors / sizes — use `AppColors` / `AppDimensions`.
+- Don't navigate from `NotificationService` or `DeepLinkService` — subscribe to their streams and navigate from a top-level coordinator.
 - Don't commit `.env`. Keep `.env.example` in sync.

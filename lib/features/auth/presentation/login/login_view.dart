@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import 'package:app_structure/core/constants/app_colors.dart';
 import 'package:app_structure/core/enums/view_state.dart';
+import 'package:app_structure/core/i18n/i18n_keys.dart';
 import 'package:app_structure/core/theme/app_dimensions.dart';
 import 'package:app_structure/core/theme/app_text.dart';
 import 'package:app_structure/core/utils/validators.dart';
@@ -26,8 +27,8 @@ class LoginView extends GetView<LoginController> {
             child: ListView(
               children: [
                 SizedBox(height: AppDimensions.spacing40.h),
-                const AppText(
-                  'Sign In',
+                AppText(
+                  I18n.signIn.tr,
                   textSize: TextSize.headline_24,
                   textWeight: TextWeight.w600,
                   textColor: AppColors.primaryTextColor,
@@ -36,7 +37,7 @@ class LoginView extends GetView<LoginController> {
 
                 AppTextField(
                   controller: controller.emailController,
-                  hintText: 'Email',
+                  hintText: I18n.email.tr,
                   keyboardType: TextInputType.emailAddress,
                   validator: Validators.email,
                 ),
@@ -45,7 +46,7 @@ class LoginView extends GetView<LoginController> {
                 Obx(
                   () => AppTextField(
                     controller: controller.passwordController,
-                    hintText: 'Password',
+                    hintText: I18n.password.tr,
                     obscureText: controller.isPasswordHidden.value,
                     validator: Validators.password,
                     suffixIcon: IconButton(
@@ -62,14 +63,14 @@ class LoginView extends GetView<LoginController> {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: controller.onForgotPassword,
-                    child: const Text('Forgot password?'),
+                    child: Text(I18n.forgotPassword.tr),
                   ),
                 ),
                 SizedBox(height: AppDimensions.spacing24.h),
 
                 Obx(
                   () => AppButton(
-                    label: 'Sign In',
+                    label: I18n.signIn.tr,
                     onPressed: controller.onLogin,
                     isLoading: controller.state.value == ViewState.loading,
                   ),

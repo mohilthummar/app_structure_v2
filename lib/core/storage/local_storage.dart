@@ -82,6 +82,38 @@ class LocalStorageService {
     await setString(_deviceNameKey, deviceName);
   }
 
+  // ── Locale (selected via LocaleController) ─────────────────────────────
+
+  static const String _languageCodeKey = 'locale_language_code';
+  static const String _countryCodeKey = 'locale_country_code';
+
+  String? get savedLanguageCode => getString(_languageCodeKey);
+  String? get savedCountryCode => getString(_countryCodeKey);
+
+  Future<void> saveLocale({required String languageCode, String? countryCode}) async {
+    await setString(_languageCodeKey, languageCode);
+    if (countryCode != null) {
+      await setString(_countryCodeKey, countryCode);
+    } else {
+      await remove(_countryCodeKey);
+    }
+  }
+
+  Future<void> clearLocale() async {
+    await remove(_languageCodeKey);
+    await remove(_countryCodeKey);
+  }
+
+  // ── Theme (selected via ThemeController; values: 'light' | 'dark' | 'system') ──
+
+  static const String _themeModeKey = 'theme_mode';
+
+  String? get savedThemeMode => getString(_themeModeKey);
+
+  Future<bool> saveThemeMode(String mode) => setString(_themeModeKey, mode);
+
+  Future<bool> clearThemeMode() => remove(_themeModeKey);
+
   // ── Typed model helpers (toJson / fromJson round-trip) ─────────────────
 
   /// Persist a model as JSON. Use for typed objects that ship `toJson()`.

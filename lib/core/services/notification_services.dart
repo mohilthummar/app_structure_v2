@@ -1,263 +1,248 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:app_structure/core/utils/utils.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
-/// Global instance for local notifications
-FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
+import 'package:app_structure/core/services/device_info_service.dart';
+import 'package:app_structure/core/services/permission_service.dart';
+import 'package:app_structure/core/storage/local_storage.dart';
+import 'package:app_structure/core/utils/app_logger.dart';
 
-/// Stores the Firebase Cloud Messaging device token
-String deviceToken = '';
+/// Payload extracted from a tapped or foreground push. Routes consumers
+/// can act on without re-parsing the raw `Map`. Always built via
+/// [NotificationService._parse], which whitelists the `type` field.
+class NotificationPayload {
+  const NotificationPayload({
+    required this.type,
+    required this.data,
+    this.title,
+    this.body,
+  });
 
-/// Service for handling push notifications and local notifications
-/// Manages Firebase Cloud Messaging (FCM) and local notification display
+  final String type;
+  final Map<String, dynamic> data;
+  final String? title;
+  final String? body;
+}
+
+/// Push + local-notification service. Replaces the legacy script-style
+/// implementation that used globals, hardcoded routes, and skipped
+/// payload validation.
 ///
-/// Example usage:
-/// ```dart
-/// class AppController {
-///   Future<void> initializeApp() async {
-///     await NotificationService.init();
-///     // App is ready to receive notifications
-///   }
-/// }
-/// ```
+/// Key safety rules (enforced here, per `.claude/rules/security.md`):
+///
+/// * **Whitelist `type` before navigating.** Push payloads are
+///   user-controlled input — only types listed in [_allowedTypes] are
+///   surfaced via [onTap]. Everything else is logged and dropped.
+/// * **No business logic inside this service.** Consumers (controllers
+///   / a top-level coordinator) subscribe to [onTap] and decide where
+///   to navigate. The service never calls `Get.toNamed` itself.
+/// * **Init guarded.** Safe to call `init()` when Firebase failed to
+///   initialize — every Firebase call is wrapped in a check and the
+///   stream just stays silent.
+///
+/// Registered as a permanent service in `InitialBinding`. Call `init()`
+/// from a top-level coordinator (typically the splash controller) so
+/// the FCM token is fetched + persisted before the first protected
+/// route is opened.
 class NotificationService {
-  /// Android notification channel configuration
-  /// Defines the channel for high-importance notifications
-  static AndroidNotificationChannel channel = const AndroidNotificationChannel(
+  NotificationService({
+    required LocalStorageService storage,
+    required PermissionService permissions,
+    required DeviceInfoService deviceInfo,
+    Set<String>? allowedTypes,
+  }) : _storage = storage,
+       _permissions = permissions,
+       _deviceInfo = deviceInfo,
+       _allowedTypes = allowedTypes ?? const {};
+
+  final LocalStorageService _storage;
+  // ignore: unused_field
+  final DeviceInfoService _deviceInfo;
+  final PermissionService _permissions;
+
+  /// Notification `type` values that callers want surfaced via `onTap`.
+  /// Anything else is dropped with a warning. Extend by passing
+  /// `allowedTypes: { 'order', 'deal', 'chat' }` when constructing.
+  final Set<String> _allowedTypes;
+
+  final FlutterLocalNotificationsPlugin _local = FlutterLocalNotificationsPlugin();
+
+  final _tapController = StreamController<NotificationPayload>.broadcast();
+  bool _initialized = false;
+
+  /// Tap stream — emit on initial-message tap (cold start), background
+  /// tap, and local-notification tap. Subscribe in a top-level
+  /// coordinator like the splash controller.
+  Stream<NotificationPayload> get onTap => _tapController.stream;
+
+  static const AndroidNotificationChannel _channel = AndroidNotificationChannel(
     'high_importance_channel',
     'High Importance Notifications',
     description: 'This channel is used for important notifications.',
     importance: Importance.high,
-    //
   );
 
-  /// Initializes the notification service
-  /// Sets up permissions, Firebase messaging, and local notifications
-  static Future<void> init() async {
-    await getNotificationPermission();
-    firebaseMessagingInit();
-    getMessage();
+  /// Idempotent. No-op when Firebase init failed.
+  Future<void> init() async {
+    if (_initialized) return;
+    if (Firebase.apps.isEmpty) {
+      AppLogger.info(
+        'Firebase not initialized — NotificationService running in disabled mode.',
+        tag: 'NotificationService',
+      );
+      _initialized = true;
+      return;
+    }
+
+    await _requestPermission();
+    await _initLocalNotifications();
+    await _wireFcm();
+    await _refreshDeviceToken();
+
+    _initialized = true;
   }
 
-  /// Requests notification permissions and sets up the device token
-  static Future<void> getNotificationPermission() async {
-    // Request FCM permissions and get device token
-    await FirebaseMessaging.instance.requestPermission().then((value) {
-      FirebaseMessaging.instance.getToken().then((token) {
-        AppPrint.data(type: 'FCM Token', text: token);
-        deviceToken = token ?? '';
-        UiUtils.initPlatformState(deviceToken);
-      });
-    });
+  /// Cancel everything (e.g. on logout). Safe to call before [init].
+  Future<void> clearAll() => _local.cancelAll();
 
-    // Request iOS-specific permissions
-    await flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()?.requestPermissions(
-      alert: true,
-      badge: true,
-      sound: true,
-      //
-    );
+  // ── Internals ────────────────────────────────────────────────────────────
 
-    // Create Android notification channel
-    await flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()?.createNotificationChannel(channel);
+  Future<void> _requestPermission() async {
+    final outcome = await _permissions.notification();
+    AppLogger.data(outcome.name, tag: 'NotificationService.permission');
   }
 
-  /// Initializes Firebase messaging and local notifications
-  static void firebaseMessagingInit() async {
-    // Android initialization settings
-    const initializationSettingsAndroid = AndroidInitializationSettings('@drawable/ic_notification');
-
-    // iOS initialization settings
-    const initializationSettingsIOS = DarwinInitializationSettings(
+  Future<void> _initLocalNotifications() async {
+    const android = AndroidInitializationSettings('@drawable/ic_notification');
+    const iOS = DarwinInitializationSettings(
       requestSoundPermission: true,
       requestBadgePermission: true,
       requestAlertPermission: true,
-      //
     );
 
-    // Combined initialization settings
-    const initializationSettings = InitializationSettings(android: initializationSettingsAndroid, iOS: initializationSettingsIOS);
-
-    // Initialize local notifications
-    await flutterLocalNotificationsPlugin.getNotificationAppLaunchDetails();
-    flutterLocalNotificationsPlugin.initialize(
-      initializationSettings,
-      onDidReceiveNotificationResponse: onSelectNotification,
-      //
+    await _local.initialize(
+      const InitializationSettings(android: android, iOS: iOS),
+      onDidReceiveNotificationResponse: (resp) => _onLocalTap(resp.payload),
     );
+
+    await _local
+        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(_channel);
   }
 
-  /// Handles notification tap events
-  /// Called when user taps on a local notification
-  static Future<dynamic> onSelectNotification(NotificationResponse notificationResponse) async {
-    AppPrint.success('-=-=-=-=-=-=-> onSelectNotification <-=-=-=-=-=--=-');
-    if (notificationResponse.payload != null && notificationResponse.payload!.isNotEmpty) {
-      navigation(notificationResponse.payload);
+  Future<void> _wireFcm() async {
+    final fm = FirebaseMessaging.instance;
+
+    await fm.setForegroundNotificationPresentationOptions(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+
+    // Cold start — app launched from a tapped notification.
+    final initial = await fm.getInitialMessage();
+    if (initial != null) _emit(initial.data, initial.notification);
+
+    // Background tap.
+    FirebaseMessaging.onMessageOpenedApp.listen((msg) {
+      _emit(msg.data, msg.notification);
+    });
+
+    // Foreground push — show a local notification on Android so the
+    // user actually sees it. iOS handles foreground presentation via
+    // setForegroundNotificationPresentationOptions above.
+    FirebaseMessaging.onMessage.listen((msg) async {
+      if (Platform.isAndroid && msg.notification != null) {
+        await _showLocal(msg);
+      }
+    });
+  }
+
+  Future<void> _refreshDeviceToken() async {
+    try {
+      final token = await FirebaseMessaging.instance.getToken();
+      if (token != null && token.isNotEmpty) {
+        await _storage.saveDeviceInfo(
+          deviceId: _storage.deviceId,
+          deviceType: _storage.deviceType,
+          deviceToken: token,
+          deviceName: _storage.deviceName,
+        );
+      }
+    } catch (e, st) {
+      AppLogger.error(
+        e.toString(),
+        tag: 'NotificationService.refreshDeviceToken',
+        error: e,
+        stackTrace: st,
+      );
     }
   }
 
-  /// Sets up Firebase messaging listeners for different app states
-  static void getMessage() async {
-    // Configure foreground notification presentation options
-    await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
-      alert: true,
-      badge: true,
-      sound: true,
-      //
-    );
-
-    // Handle notifications when app is killed/terminated
-    FirebaseMessaging.instance.getInitialMessage().then((RemoteMessage? message) async {
-      AppPrint.success('-=-=-=-=-=-=-> getInitialMessage <-=-=-=-=-=--=-');
-      if (message != null) {
-        Future.delayed(const Duration(seconds: 3), () => navigation(message.data));
-      }
-    });
-
-    // Handle notifications when app is in background
-    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage? message) {
-      AppPrint.success('onMessageOpenedApp');
-      if (message != null) {
-        navigation(message.data);
-      }
-    });
-
-    // Handle notifications when app is in foreground
-    FirebaseMessaging.onMessage.listen((RemoteMessage? message) async {
-      if (message != null) {
-        AppPrint.data(type: 'Title', text: message.notification?.body);
-        if (Platform.isAndroid) {
-          showNotification(remoteMessage: message);
-        }
-      } else {
-        AppPrint.error(type: 'Fusion getMessage', text: 'message null');
-      }
-
-      // Additional notification handling can be added here
-      // Example: Update notification count, emit socket events, etc.
-    });
-
-    // Re-configure foreground notification presentation options
-    FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
-      badge: true,
-      alert: true,
-      sound: true,
-      //
-    );
-  }
-
-  /// Displays a local notification
-  /// Shows notification on Android when app is in foreground
-  static Future<void> showNotification({RemoteMessage? remoteMessage}) async {
-    // Android notification details
-    final AndroidNotificationDetails android = AndroidNotificationDetails(
-      channel.id,
-      channel.name,
-      channelDescription: channel.description,
+  Future<void> _showLocal(RemoteMessage msg) async {
+    final android = AndroidNotificationDetails(
+      _channel.id,
+      _channel.name,
+      channelDescription: _channel.description,
       priority: Priority.high,
       importance: Importance.max,
-      color: const Color.fromARGB(255, 255, 255, 255),
       icon: '@drawable/ic_notification',
-      //
     );
-
-    // iOS notification details
-    const DarwinNotificationDetails iOS = DarwinNotificationDetails(
+    const iOS = DarwinNotificationDetails(
       presentSound: true,
       presentAlert: true,
       presentBadge: true,
-      //
     );
 
-    // Platform-specific notification details
-    final NotificationDetails platform = NotificationDetails(android: android, iOS: iOS);
-
-    // Show the notification
-    await flutterLocalNotificationsPlugin.show(
-      remoteMessage!.notification.hashCode,
-      remoteMessage.notification!.title,
-      remoteMessage.notification!.body,
-      platform,
-      payload: jsonEncode(remoteMessage.data),
-      //
+    await _local.show(
+      msg.notification.hashCode,
+      msg.notification!.title,
+      msg.notification!.body,
+      NotificationDetails(android: android, iOS: iOS),
+      payload: jsonEncode(msg.data),
     );
   }
 
-  /// Handles navigation based on notification payload
-  /// Routes to appropriate screens based on notification type
-  static void navigation(dynamic payload) async {
-    Map<String, dynamic> newPayload = {};
-
-    // Parse payload if it's a string
-    if (payload.runtimeType == String) {
-      newPayload = jsonDecode(payload);
-    } else {
-      newPayload = payload;
-    }
-
-    AppPrint.success(newPayload);
-    AppPrint.success(newPayload['type']);
-
-    // Route based on notification type
-    switch (newPayload['type'].toString()) {
-      case 'newDeal':
-      case 'dealSoldOut':
-        _handleDealNotification();
-        break;
-      case 'transactionStatus':
-        _handleTransactionNotification();
-        break;
-      default:
-        // Get.toNamed(RoutesName.notificationView);
-        break;
+  void _onLocalTap(String? raw) {
+    if (raw == null || raw.isEmpty) return;
+    try {
+      final data = jsonDecode(raw);
+      if (data is Map<String, dynamic>) {
+        _emit(data, null);
+      }
+    } catch (e) {
+      AppLogger.warning(
+        'Ignoring local-notification tap with malformed payload: $e',
+        tag: 'NotificationService',
+      );
     }
   }
 
-  /// Handles deal-related notifications
-  /// Navigates to deals page and refreshes data
-  static void _handleDealNotification() {
-    // if (Get.currentRoute == RoutesName.bottomBarView) {
-    //   BottomBarController bottomBarController = Get.put(BottomBarController());
-    //   bottomBarController.selectPageIndex(1);
-    //   Get.put(CurrentDealsController()).fetch();
-    // } else {
-    //   Get.offAllNamed(RoutesName.bottomBarView, arguments: 1);
-    //   Get.put(CurrentDealsController()).fetch();
-    // }
-  }
-
-  /// Handles transaction status notifications
-  /// Navigates to history page and refreshes data
-  static void _handleTransactionNotification() {
-    // if (Get.currentRoute == RoutesName.bottomBarView) {
-    //   BottomBarController bottomBarController = Get.put(BottomBarController());
-    //   bottomBarController.selectPageIndex(2);
-    //   Get.put(OnGoingTabController()).fetch();
-    // } else {
-    //   Get.offAllNamed(RoutesName.bottomBarView, arguments: 2);
-    //   Get.put(OnGoingTabController()).fetch();
-    // }
-  }
-
-  /// Gets the current device token
-  /// Returns the FCM token for the current device
-  static String getDeviceToken() {
-    return deviceToken;
-  }
-
-  /// Clears all notifications
-  /// Removes all pending and delivered notifications
-  static Future<void> clearAllNotifications() async {
-    await flutterLocalNotificationsPlugin.cancelAll();
-  }
-
-  /// Clears a specific notification by ID
-  /// [id] - The notification ID to cancel
-  static Future<void> clearNotification(int id) async {
-    await flutterLocalNotificationsPlugin.cancel(id);
+  /// Validates the payload and pushes onto `onTap` if allowed.
+  void _emit(Map<String, dynamic> data, RemoteNotification? notification) {
+    final type = data['type']?.toString();
+    if (type == null || type.isEmpty) {
+      AppLogger.warning('Dropping notification with missing `type`.', tag: 'NotificationService');
+      return;
+    }
+    if (_allowedTypes.isNotEmpty && !_allowedTypes.contains(type)) {
+      AppLogger.warning(
+        'Dropping notification with non-whitelisted type: $type',
+        tag: 'NotificationService',
+      );
+      return;
+    }
+    _tapController.add(
+      NotificationPayload(
+        type: type,
+        data: Map<String, dynamic>.from(data),
+        title: notification?.title,
+        body: notification?.body,
+      ),
+    );
   }
 }

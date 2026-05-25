@@ -1,6 +1,8 @@
 import 'package:get/get.dart';
 
 import 'package:app_structure/core/routing/route_names.dart';
+import 'package:app_structure/core/services/analytics_service.dart';
+import 'package:app_structure/core/services/crashlytics_service.dart';
 import 'package:app_structure/features/auth/data/login_response.dart';
 import 'package:app_structure/features/auth/data/user_model.dart';
 import 'package:app_structure/features/auth/domain/auth_repository.dart';
@@ -39,6 +41,7 @@ class AuthController extends GetxController {
   void applyLoginResponse(LoginResponse response) {
     loginResponse.value = response;
     user.value = response.user;
+    _pushUserToTelemetry(response.user?.id);
   }
 
   /// Single logout entry point. Tolerates API failure; always clears
@@ -53,6 +56,7 @@ class AuthController extends GetxController {
 
     user.value = null;
     loginResponse.value = null;
+    _pushUserToTelemetry(null);
 
     try {
       Get.offAllNamed(RouteNames.login);
@@ -62,5 +66,17 @@ class AuthController extends GetxController {
 
     await Future<void>.delayed(Duration.zero);
     await Get.deleteAll(force: false);
+  }
+
+  /// Push the current user id to both telemetry services. Both calls are
+  /// no-ops when their respective `.env` flag is off OR when Firebase
+  /// init failed, so this is safe to call without any guard.
+  void _pushUserToTelemetry(String? userId) {
+    if (Get.isRegistered<CrashlyticsService>()) {
+      Get.find<CrashlyticsService>().setUserId(userId);
+    }
+    if (Get.isRegistered<AnalyticsService>()) {
+      Get.find<AnalyticsService>().setUserId(userId);
+    }
   }
 }

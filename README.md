@@ -1,116 +1,161 @@
 # app_structure
 
-Flutter app with clean architecture, GetX, and environment-based configuration.
+A production-leaning Flutter skeleton with clean architecture (GetX), Dio + interceptors, env-based config, i18n (English + Hindi), light/dark/system theming, Firebase Crashlytics + Analytics (guarded), notifications + deep links with safety whitelists, connectivity tracking, and a sample home (dashboard + profile) feature you can clone for new screens.
 
-## Prerequisites
+Authoritative architecture doc: [docs/PROJECT_ARCHITECTURE.md](docs/PROJECT_ARCHITECTURE.md)
 
-- Flutter SDK ^3.8.1
-- Dart ^3.8.1
+---
 
-## Getting Started
+## Quick start
 
 ```bash
-# Clone and enter project
-cd app_structure_v2
+# 1. Copy .env from template + edit values
+make env-setup
 
-# Install dependencies
+# 2. Install deps
 flutter pub get
 
-# Create .env from template (required for API base URL and endpoints)
-make env-setup
-# Then edit .env with your BASE_URL_* and endpoint paths
-
-# Run the app
+# 3. Run (defaults to EnvironmentType.development — change in lib/main.dart)
 make run
-# or: flutter run
 ```
 
-**Important:** The app reads configuration from a `.env` file. Copy `.env.example` to `.env` (e.g. `make env-setup`) and fill in values. Never commit `.env`; it is in `.gitignore`.
+`.env` is gitignored. Keep `.env.example` in sync whenever you add a new key.
 
-## Project Structure
+---
 
-```
-lib/
-├── main.dart              # Entry: bootstrap → setEnvironment → runApp
-├── bootstrap.dart         # Loads .env, WidgetsBinding, orientation, etc.
-├── app.dart               # GetMaterialApp, routes, theme, LazyBinding
-├── core/                   # Shared infrastructure
-│   ├── base/              # BaseViewController, OverlayController
-│   ├── config/            # AppEnvironment, ApiUrls (env-based)
-│   ├── constants/        # app_colors, app_strings, app_assets, etc.
-│   ├── enums/             # common_enums (EnvironmentType), enums
-│   ├── extensions/       # number, date, currency
-│   ├── network/           # ClientService (Dio), base_response, interceptor
-│   ├── services/          # connectivity, notifications, deep_linking
-│   ├── storage/           # Preferences (GetStorage)
-│   ├── theme/             # app_theme, app_style, app_text
-│   ├── types/             # Result<L, R>, Failure, Success
-│   └── utils/             # validation_mixin, app_snack_bar, ui_utils, formatters
-├── routes/
-│   ├── routes.dart        # GetPage list, getPage helper
-│   └── routes_name.dart   # Route name constants
-├── shared/                 # Reusable across features
-│   ├── models/            # e.g. DropDownModel
-│   ├── widgets/           # app_button, app_text_field, screen_header, etc.
-│   └── packages/          # country_code, country_state_city, etc.
-└── features/
-    └── auth/
-        ├── domain/        # user.dart, auth_repository.dart (interface)
-        ├── data/          # user_model.dart, auth_remote_datasource, auth_repository_impl
-        └── presentation/
-            ├── splash/   # splash_view, splash_controller, splash_bindings
-            ├── sign_in/   # sign_in_view, sign_in_controller, sign_in_bindings
-            ├── sign_up/   # sign_up_view, sign_up_controller, sign_up_bindings
-            └── shared/   # otp_dialog.dart
-```
+## What's in the box
 
-## Environment and .env
+| Layer | Where |
+|---|---|
+| Entry + boot orchestration | `lib/main.dart`, `lib/bootstrap.dart` |
+| Error handling | `lib/core/error/app_error_handler.dart` (FlutterError + PlatformDispatcher + Zone) |
+| Logging | `lib/core/utils/app_logger.dart` (gated by `enableLogging`, forwards errors to Crashlytics) |
+| Config | `lib/core/config/{app_environment,api_urls}.dart` |
+| DI | `lib/core/di/initial_binding.dart` (one place wires everything) |
+| Storage | `lib/core/storage/{secure_storage,local_storage}.dart` |
+| Network | `lib/core/network/{api_client,auth_interceptor,token_refresh_interceptor,api_response}.dart` |
+| Routing | `lib/core/routing/{route_names,app_pages,auth_middleware}.dart` |
+| UI state | `lib/core/enums/view_state.dart` + `lib/shared/widgets/state_switch.dart` |
+| Theme | `lib/core/theme/*` (brightness-aware) + `lib/core/controllers/theme_controller.dart` |
+| i18n | `lib/core/i18n/*` + `assets/i18n/*.json` + `lib/core/controllers/locale_controller.dart` |
+| Telemetry | `lib/core/services/{crashlytics_service,analytics_service}.dart` (gated by .env flags) |
+| Notifications | `lib/core/services/notification_services.dart` (whitelist-validated, stream-based) |
+| Deep links | `lib/core/services/deep_linking_manager.dart` (whitelist-validated, stream-based) |
+| Permissions | `lib/core/services/permission_service.dart` (typed outcomes) |
+| Connectivity | `lib/core/controllers/connectivity_controller.dart` + `lib/shared/widgets/offline_banner.dart` |
+| App info | `lib/core/services/app_info_service.dart` (package_info_plus) |
+| File downloads | `lib/core/services/file_download_service.dart` (Dio streaming, sanitized paths, cancel token, progress) |
+| Base controller | `lib/core/base/base_controller.dart` (state + errorMessage + runGuarded) |
+| Auth feature | `lib/features/auth/` (splash, login, forgot-password) |
+| Sample feature | `lib/features/home/` (dashboard with pagination, profile with theme + language pickers + logout) |
 
-- **Single .env file:** All environments use one `.env`; which base URL/keys are used is decided by `EnvironmentType` set in `main.dart`.
-- **Load order:** `main.dart` calls `await bootstrap()` first (which loads `.env` via `flutter_dotenv`), then `AppEnvironment.setEnvironment(EnvironmentType.development)`, then `runApp()`. This ensures `baseUrl` and other env values are available when the app runs.
-- **AppEnvironment** (`core/config/app_environment.dart`):
-  - `setEnvironment(EnvironmentType)` — call once after bootstrap.
-  - `baseUrl` — from `BASE_URL_LOCAL`, `BASE_URL_DEV`, `BASE_URL_STAGING`, or `BASE_URL_PROD` depending on type.
-  - `enableLogging`, `enableCrashlytics` — from `.env` flags.
-- **ApiUrls** (`core/config/api_url.dart`): Endpoint paths read from `.env` (e.g. `EP_SIGN_IN`, `EP_SIGN_UP`). Used by `AuthRemoteDataSource` and `ClientService`.
-- **ClientService** (`core/network/client_service.dart`): Dio `baseUrl` is `AppEnvironment.baseUrl` + API version; timeouts and interceptors configured there.
-- **pubspec.yaml:** `flutter_dotenv: ^6.0.0`; assets include `.env`.
-- **.gitignore:** `.env` is ignored; `.env.example` is committed as a template.
+---
 
-To switch environment, change in `main.dart`:
+## Commands
+
+`make help` lists everything. Highlights:
+
+| Goal | Command |
+|---|---|
+| Run app | `make run` (debug) / `make run-release` |
+| Verify everything | `make verify` (pub get + fix + format-check + analyze + test) |
+| Single test | `make test-file FILE=test/...` |
+| Setup `.env` | `make env-setup` |
+| Native splash | `make splash` (after adding `flutter_native_splash` config) |
+| App icons | `make icons` (after adding `flutter_launcher_icons` config) |
+| List translations | `make l10n` |
+| Deep clean | `make hard-clean` |
+
+---
+
+## Environment + .env
+
+Single `.env` file; which keys are read is picked by `EnvironmentType` in `lib/main.dart` (no flavors, no `--dart-define`):
 
 ```dart
-AppEnvironment.setEnvironment(EnvironmentType.development); // or .local, .staging, .production
+await bootstrap(environment: EnvironmentType.development);
+// or .local, .staging, .production
 ```
 
-## Auth Flow (Sign In / Sign Up)
+`AppEnvironment.baseUrl` resolves to one of `BASE_URL_LOCAL` / `BASE_URL_DEV` / `BASE_URL_STAGING` / `BASE_URL_PROD`. Endpoint paths live in `EP_*` keys.
 
-- **Controllers** do not use `BuildContext` after `await` (avoids “use BuildContext across async gaps”).
-- **Sign-up:** `SignUpController.onSignUp()` returns `Future<bool>`. View awaits it, then if `context.mounted && shouldShowOtp` shows `OtpDialog`. OTP verify/resend and navigation (e.g. to sign-in) are in the controller.
-- **Sign-in:** Same pattern — `SignInController.onSignIn()` returns `Future<bool>`; view shows OTP dialog only when `context.mounted && shouldShowOtp`.
-- **Bindings:** `SignInBindings` / `SignUpBindings` register `AuthRemoteDataSource`, `AuthRepositoryImpl`, and the controller. Routes use these bindings.
+**Feature flags read from `.env`:**
+- `ENABLE_LOGGING` (also gates `pretty_dio_logger`)
+- `ENABLE_CRASHLYTICS`
+- `ENABLE_ANALYTICS`
 
-## Routes
+Reading `AppEnvironment` or `ApiUrls` before `bootstrap()` awaits throws `dotenv unloaded` — bootstrap order matters.
 
-- **routes_name.dart:** Constants like `RoutesName.splashView`, `signInView`, `signUpView`.
-- **routes.dart:** `pages` list of `GetPage` with name, page widget, and bindings. Initial route: `RoutesName.splashView` (`/`).
+---
 
-## Makefile
+## Firebase
 
-- **Run:** `make run`, `make run-release`, `make run-profile`
-- **Env:** `make env-setup` — copies `.env.example` to `.env` if `.env` does not exist
-- **Code quality:** `make format`, `make analyze`, `make lint`, `make fix`
-- **Tests:** `make test`, `make test-file FILE=path/to/test.dart`
-- **Maintenance:** `make get`, `make clean`, `make reset`, `make doctor`
-- **Help:** `make help`
+The skeleton ships with `firebase_core`, `firebase_messaging`, `firebase_crashlytics`, `firebase_analytics`. Firebase init in `bootstrap.dart` is **guarded** — missing `google-services.json` / `GoogleService-Info.plist` logs and continues; Crashlytics + Analytics services no-op cleanly. The app boots either way.
 
-## Checklist (nothing missing)
+To wire it up properly:
 
-- [x] `.env` loaded in `bootstrap()` before `setEnvironment` in `main.dart`
-- [x] `AppEnvironment` and `ApiUrls` read from `dotenv`; `ClientService` uses `AppEnvironment.baseUrl`
-- [x] `.env` in `pubspec.yaml` assets and in `.gitignore`; `.env.example` committed
-- [x] Auth sign-in/sign-up return `bool`; views show OTP dialog with `context.mounted` check
-- [x] Routes and bindings for splash, sign-in, sign-up; GetX bindings inject datasource → repository → controller
-- [x] `make env-setup` to create `.env` from `.env.example`
+```bash
+# Recommended — runs once, configures Android + iOS + web
+flutterfire configure
+```
 
-For detailed architecture and naming conventions, see `.cursor/rules/flutter-architecture.mdc`.
+Or drop in the platform files manually:
+- Android: `android/app/google-services.json`
+- iOS: `ios/Runner/GoogleService-Info.plist`
+
+Set `ENABLE_CRASHLYTICS=true` and `ENABLE_ANALYTICS=true` in `.env` to turn on collection.
+
+---
+
+## Boot order (don't reorder)
+
+`main.dart` is 5 lines: `runZonedGuarded(() async { await bootstrap(environment: ...); runApp(...); }, AppErrorHandler.onZoneError);`
+
+Every step lives in `bootstrap.dart`:
+
+1. `WidgetsFlutterBinding.ensureInitialized()`
+2. `AppErrorHandler.init()`
+3. `dotenv.load()`
+4. `AppEnvironment.setEnvironment(env)`
+5. Firebase init (guarded)
+6. System chrome + portrait lock
+7. `InitialBinding().dependencies()`
+8. `LocalStorageService.init()`
+9. Crashlytics + Analytics init
+10. Load `AppTranslations` + `LocaleController` + `ThemeController`
+
+Then `runApp`.
+
+---
+
+## Architecture in 30 seconds
+
+```
+Presentation ──> Domain (interface only) <── Data (impl)
+   View                                       │
+   Controller (extends BaseController)        ├── *Model (fromJson/toJson) — THE type
+   Bindings (DI wiring)                       ├── *RemoteDataSource (calls ApiClient)
+                                              └── *RepositoryImpl (try/catch, persists side effects)
+```
+
+- Controllers depend on the **interface** in `domain/`, never on the impl.
+- `*Model` flows through every layer — no entity / DTO split, no `toEntity()`.
+- Errors travel as `Exception` until they hit the controller, which sets `state = ViewState.error` + `errorMessage`.
+- Views render via `StateSwitch` — loading / empty / error / success builders.
+- Strings via `I18n.<key>.tr`, colors via `AppColors.x`, sizes via `AppDimensions.x` — never inline.
+
+Full contract: [docs/PROJECT_ARCHITECTURE.md](docs/PROJECT_ARCHITECTURE.md). One-page version: [.claude/rules/architecture.md](.claude/rules/architecture.md).
+
+---
+
+## Starting a new project from this skeleton
+
+See section 23 of [docs/PROJECT_ARCHITECTURE.md](docs/PROJECT_ARCHITECTURE.md#23-starting-a-new-project-from-this-skeleton) for the full checklist. TL;DR:
+
+1. Rename the package (`app_structure` → your name).
+2. Replace `features/home/` with your real feature.
+3. Fill in `.env` (`BASE_URL_*`, `EP_*`, feature flags).
+4. Add Firebase config files (or run `flutterfire configure`).
+5. Add iOS / Android permission entries for what you actually use.
+6. Update `AppColors.primaryColor` + dark variants to your brand.
+7. Ship the languages you actually need (delete `hi.json` if you don't want Hindi).

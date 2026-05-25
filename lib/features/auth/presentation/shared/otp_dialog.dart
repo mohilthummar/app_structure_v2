@@ -2,7 +2,7 @@ import 'package:app_structure/core/theme/app_style.dart';
 import 'package:app_structure/core/theme/app_text.dart';
 import 'package:app_structure/core/utils/app_loader.dart';
 import 'package:app_structure/core/constants/app_colors.dart';
-import 'package:app_structure/core/constants/app_strings.dart';
+import 'package:app_structure/core/i18n/i18n_keys.dart';
 import 'package:app_structure/shared/widgets/app_button.dart';
 import 'package:app_structure/shared/widgets/app_pin_code_field.dart';
 import 'package:flutter/material.dart';
@@ -44,8 +44,8 @@ class OtpDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             // Title View
-            const AppText(
-              AppStrings.enterOtp,
+            AppText(
+              I18n.otpTitle.tr,
               textSize: TextSize.large_16,
               textWeight: TextWeight.w600,
               textColor: AppColors.whiteTextColor,
@@ -53,8 +53,8 @@ class OtpDialog extends StatelessWidget {
             8.verticalSpace,
 
             // Sub title view
-            const AppText.multiLine(
-              AppStrings.pleaseEnterTheOtpSentToYourEmail,
+            AppText.multiLine(
+              I18n.otpSubtitle.tr,
               textSize: TextSize.small_12,
               textColor: AppColors.whiteTextColor,
               textAlign: TextAlign.center,
@@ -66,8 +66,8 @@ class OtpDialog extends StatelessWidget {
             16.verticalSpace,
 
             // Did not receive code view
-            const AppText(
-              AppStrings.didNotReceiveTheCode,
+            AppText(
+              I18n.didNotReceiveCode.tr,
               textSize: TextSize.extraSmall_10,
               textColor: AppColors.whiteTextColor,
               textAlign: TextAlign.center,
@@ -82,8 +82,8 @@ class OtpDialog extends StatelessWidget {
 
               return GestureDetector(
                 onTap: onResend,
-                child: const AppText(
-                  AppStrings.resendCode,
+                child: AppText(
+                  I18n.resendCode.tr,
                   textSize: TextSize.extraSmall_10,
                   textColor: AppColors.whiteTextColor,
                   textDecoration: TextDecoration.underline,
@@ -97,7 +97,7 @@ class OtpDialog extends StatelessWidget {
               () => AppButton(
                 minimumSize: Size(220.w, 42.h),
                 onPressed: onVerify,
-                label: AppStrings.verify,
+                label: I18n.verify.tr,
                 isLoading: isLoading.value,
               ),
             ),

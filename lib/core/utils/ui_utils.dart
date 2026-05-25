@@ -3,13 +3,10 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:app_structure/core/constants/app_colors.dart';
-import 'package:app_structure/core/storage/local_storage.dart';
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
@@ -25,7 +22,6 @@ import 'package:path_provider/path_provider.dart';
 /// UiUtils.darkStatusBar();
 /// UiUtils.screenPortrait();
 /// final type = UiUtils.getDeviceType();
-/// await UiUtils.initPlatformState(fcmToken);
 ///
 /// // Date operations
 /// final formatted = UiUtils.changeDateFormat(date: DateTime.now(), outputFormat: 'yyyy-MM-dd');
@@ -89,53 +85,8 @@ class UiUtils {
     SystemChannels.textInput.invokeMethod('TextInput.hide');
   }
 
-  /// Initializes platform state and returns device information
-  static Future<Map<String, String>> initPlatformState(String fcmToken) async {
-    final DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
-    final RxString deviceId = ''.obs;
-    final RxString deviceName = ''.obs;
-    final RxString deviceType = ''.obs;
-    try {
-      if (Platform.isAndroid) {
-        final AndroidDeviceInfo androidDeviceInfo = (await deviceInfoPlugin.androidInfo);
-        deviceId.value = androidDeviceInfo.id;
-        deviceName.value = androidDeviceInfo.brand;
-        deviceType.value = 'Android';
-      } else if (Platform.isIOS) {
-        final IosDeviceInfo iosDeviceInfo = (await deviceInfoPlugin.iosInfo);
-        deviceId.value = iosDeviceInfo.identifierForVendor ?? '';
-        deviceName.value = iosDeviceInfo.modelName;
-        deviceType.value = iosDeviceInfo.systemName;
-      }
-
-      // Persist via the new LocalStorageService named accessors. Device info
-      // is also handled by DeviceInfoService in `core/services/`; prefer that
-      // for new code. This call is kept so legacy callers of
-      // `UiUtils.initPlatformState` keep working.
-      if (Get.isRegistered<LocalStorageService>()) {
-        await Get.find<LocalStorageService>().saveDeviceInfo(
-          deviceId: deviceId.value,
-          deviceType: deviceType.value,
-          deviceToken: fcmToken,
-          deviceName: deviceName.value,
-        );
-      }
-
-      debugPrint('device_name: ${deviceName.value}');
-      debugPrint('device_type: ${deviceType.value}');
-      debugPrint('device_id: ${deviceId.value}');
-      debugPrint('device_token: $fcmToken');
-    } catch (e) {
-      debugPrint(e.toString());
-    }
-
-    return {
-      'device_id': deviceId.value,
-      'device_token': deviceId.value,
-      'device_name': deviceType.value,
-      'device_type': deviceType.value,
-    };
-  }
+  // (Removed `initPlatformState` — `DeviceInfoService` in `core/services/`
+  // is the canonical path for device id + FCM token persistence.)
 
   // ============================================================================
   // DATE UTILITIES

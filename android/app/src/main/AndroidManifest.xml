@@ -1,4 +1,32 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Internet (network calls + Dio downloads) -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+
+    <!-- Push notifications (Firebase Messaging + flutter_local_notifications).
+         POST_NOTIFICATIONS is required on Android 13+ (API 33). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
+
+    <!-- File downloads to public Downloads folder.
+         On Android 10+ (API 29+) scoped storage means WRITE_EXTERNAL_STORAGE
+         is only honored up to API 28; we declare it with maxSdkVersion to
+         keep older devices working without triggering scanner warnings on
+         newer ones. App-private downloads (DownloadDestination.appDocuments)
+         work without any permission on every Android version. -->
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32"/>
+
+    <!-- Cleartext HTTP traffic is disabled by default on API 28+.
+         To allow http:// (e.g. local dev backends), add:
+           android:usesCleartextTraffic="true"
+         OR ship a `network_security_config.xml` that whitelists specific
+         hosts only (preferred). -->
     <application
         android:label="app_structure"
         android:name="${applicationName}"

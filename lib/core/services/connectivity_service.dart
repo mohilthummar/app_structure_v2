@@ -1,4 +1,4 @@
-import 'package:app_structure/core/utils/utils.dart';
+import 'package:app_structure/core/utils/app_logger.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 /// Service for checking network connectivity status
@@ -29,7 +29,7 @@ class ConnectivityService {
       final bool hasNoConnection = connectivityResults.contains(ConnectivityResult.none);
       return !hasNoConnection;
     } catch (e) {
-      AppPrint.error(type: 'ConnectivityService: Error checking connectivity', text: e.toString());
+      AppLogger.error(e.toString(), tag: 'ConnectivityService.isConnected', error: e);
       return false;
     }
   }
@@ -39,7 +39,7 @@ class ConnectivityService {
     try {
       return await Connectivity().checkConnectivity();
     } catch (e) {
-      AppPrint.error(type: 'ConnectivityService: Error getting connection types', text: e.toString());
+      AppLogger.error(e.toString(), tag: 'ConnectivityService.getConnectionTypes', error: e);
       return [];
     }
   }
@@ -76,7 +76,7 @@ class ConnectivityService {
 
       return descriptions.join(', ');
     } catch (e) {
-      AppPrint.error(type: 'ConnectivityService: Error getting connection description', text: e.toString());
+      AppLogger.error(e.toString(), tag: 'ConnectivityService.getConnectionDescription', error: e);
       return 'Unknown';
     }
   }

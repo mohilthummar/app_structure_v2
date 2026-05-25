@@ -242,24 +242,26 @@ info: ## Show Flutter/Dart/project version info
 	@echo "$(CYAN)Project:$(RESET)" && head -6 pubspec.yaml
 
 # ============================
-# GENERATION (for future use)
+# GENERATION
 # ============================
 
-# build-runner: ## Run build_runner (generates .g.dart, .freezed.dart)
-# 	@echo "$(BLUE)Running build_runner...$(RESET)"
+icons: ## Generate app icons. First add `flutter_launcher_icons` to dev_dependencies + config in pubspec.yaml.
+	@echo "$(BLUE)Generating app icons...$(RESET)"
+	dart run flutter_launcher_icons
+
+splash: ## Generate native splash screen. First add `flutter_native_splash` to dev_dependencies + config in pubspec.yaml.
+	@echo "$(BLUE)Generating native splash screen...$(RESET)"
+	dart run flutter_native_splash:create
+
+l10n: ## Print location of translation files (no codegen — GetX Translations reads JSON at runtime).
+	@echo "$(CYAN)Translation files:$(RESET)"
+	@ls -1 assets/i18n/
+	@echo ""
+	@echo "Add a key:  edit each *.json under assets/i18n/, then add a typed constant to lib/core/i18n/i18n_keys.dart."
+	@echo "Add a language:  drop a new <lang>.json + add the Locale to AppTranslations.supportedLocales."
+
+# build-runner: ## Uncomment when you adopt json_serializable / freezed.
 # 	dart run build_runner build --delete-conflicting-outputs
-
-# watch: ## Watch build_runner (auto-regenerates on file changes)
-# 	@echo "$(BLUE)Watching build_runner...$(RESET)"
-# 	dart run build_runner watch --delete-conflicting-outputs
-
-# icons: ## Generate app icons (requires flutter_launcher_icons)
-# 	@echo "$(BLUE)Generating app icons...$(RESET)"
-# 	dart run flutter_launcher_icons
-
-# splash: ## Generate native splash screen (requires flutter_native_splash)
-# 	@echo "$(BLUE)Generating splash screen...$(RESET)"
-# 	dart run flutter_native_splash:create
 
 .PHONY: help build-apk build-apk-split build-ios build-bundle build-debug build-profile build-web \
 	run run-release run-profile devices uninstall clear-data logs \
@@ -267,4 +269,5 @@ info: ## Show Flutter/Dart/project version info
 	format format-check analyze lint fix fix-dry \
 	test test-v test-coverage test-file \
 	clean get reset hard-clean upgrade outdated deps \
-	doctor doctor-v size info
+	doctor doctor-v size info \
+	icons splash l10n

@@ -127,6 +127,29 @@ class AppColors {
   static const Color scrollbarThumb = Color(0xFFCBD5E1);
   static const Color scrollbarThumbHover = Color(0xFF94A3B8);
 
+  // Material hover / splash (used by AppTheme — both brightnesses)
+  static const Color hoverLight = Color(0x80C5C2C2);
+  static const Color hoverDark = Color(0xC7C9C0C0);
+  static const Color splashLight = Color(0x66C8C8C8);
+  static const Color splashDark = Color(0xBEF3EFEF);
+
+  // ════════════════════════════════════════════════════════════════════════
+  // Dark-mode surface tokens
+  // Used by AppTheme via the `isLight ? X : XDark` selector. If you add
+  // a new light token that participates in the theme, add its dark
+  // counterpart here too — otherwise dark mode will look broken.
+  // ════════════════════════════════════════════════════════════════════════
+
+  static const Color backgroundDark = Color(0xFF121212);
+  static const Color surfaceDark = Color(0xFF1E1E1E);
+  static const Color containerFillDark = Color(0xFF2A2A2A);
+  static const Color primaryTextDark = Color(0xFFE5E5E5);
+  static const Color secondaryTextDark = Color(0xFFB3B3B3);
+  static const Color disabledTextDark = Color(0xFF6E6E6E);
+  static const Color dividerDark = Color(0xFF2F2F2F);
+  static const Color placeholderDark = Color(0xFF6E6E6E);
+  static const Color primaryDark = Color(0xFF7BA7B6);
+
   // Primary swatch (brand orange)
   static MaterialColor get primarySwatch => MaterialColor(
     orange400.toARGB32(),

@@ -30,16 +30,29 @@ class AppTheme {
     final isLight = brightness == Brightness.light;
     final foundation = isLight ? ThemeData.light() : ThemeData.dark();
 
+    // Brightness-aware swatch — every token below picks light or dark
+    // variant via the `pick` helper. Adding a new themed surface? Add
+    // both light and dark tokens to AppColors and pick them here.
+    Color pick(Color lightColor, Color darkColor) => isLight ? lightColor : darkColor;
+
+    final background = pick(AppColors.backgroundColor, AppColors.backgroundDark);
+    final surface = pick(AppColors.backgroundColor, AppColors.surfaceDark);
+    final containerFill = pick(AppColors.containerFillColor, AppColors.containerFillDark);
+    final primary = pick(AppColors.primaryColor, AppColors.primaryDark);
+    final primaryText = pick(AppColors.primaryTextColor, AppColors.primaryTextDark);
+    final placeholder = pick(AppColors.placeholder, AppColors.placeholderDark);
+    final divider = pick(AppColors.dividerAndBorderColor, AppColors.dividerDark);
+
     return foundation.copyWith(
       brightness: brightness,
-      scaffoldBackgroundColor: AppColors.backgroundColor,
+      scaffoldBackgroundColor: background,
       disabledColor: AppColors.disableColor,
-      hoverColor: isLight ? const Color(0x80C5C2C2) : const Color(0xC7C9C0C0),
-      splashColor: isLight ? const Color(0x66C8C8C8) : const Color(0xBEF3EFEF),
+      hoverColor: pick(AppColors.hoverLight, AppColors.hoverDark),
+      splashColor: pick(AppColors.splashLight, AppColors.splashDark),
       splashFactory: InkRipple.splashFactory,
       visualDensity: VisualDensity.adaptivePlatformDensity,
       highlightColor: Colors.transparent,
-      primaryColor: AppColors.primaryColor,
+      primaryColor: primary,
 
       appBarTheme: AppBarTheme(
         systemOverlayStyle: isLight ? SystemUiOverlayStyle.dark : SystemUiOverlayStyle.light,
@@ -47,8 +60,8 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
-        iconTheme: const IconThemeData(color: AppColors.primaryColor),
-        titleTextStyle: AppTypography.semibold(AppTypography.base).copyWith(color: AppColors.primaryTextColor),
+        iconTheme: IconThemeData(color: primary),
+        titleTextStyle: AppTypography.semibold(AppTypography.base).copyWith(color: primaryText),
       ),
 
       textTheme: _buildTextTheme(foundation.textTheme),
@@ -56,16 +69,16 @@ class AppTheme {
 
       bottomSheetTheme: BottomSheetThemeData(
         surfaceTintColor: Colors.transparent,
-        backgroundColor: AppColors.backgroundColor,
-        shape: RoundedRectangleBorder(
+        backgroundColor: surface,
+        shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(AppDimensions.radius20)),
         ),
       ),
 
       cardTheme: CardThemeData(
-        color: AppColors.containerFillColor,
+        color: containerFill,
         elevation: 2,
-        shadowColor: AppColors.primaryColor.withValues(alpha: 0.1),
+        shadowColor: primary.withValues(alpha: 0.1),
         shape: RoundedRectangleBorder(
           borderRadius: AppDimensions.borderRadius12,
         ),
@@ -73,10 +86,10 @@ class AppTheme {
 
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: AppColors.containerFillColor,
+        fillColor: containerFill,
         contentPadding: AppDimensions.inputPadding,
-        hintStyle: AppTypography.sm.copyWith(color: AppColors.placeholder),
-        labelStyle: AppTypography.sm.copyWith(color: AppColors.primaryTextColor),
+        hintStyle: AppTypography.sm.copyWith(color: placeholder),
+        labelStyle: AppTypography.sm.copyWith(color: primaryText),
         errorStyle: AppTypography.xs.copyWith(color: AppColors.error),
         border: OutlineInputBorder(
           borderRadius: AppDimensions.borderRadius10,
@@ -88,7 +101,7 @@ class AppTheme {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: AppDimensions.borderRadius10,
-          borderSide: const BorderSide(color: AppColors.primaryColor, width: 1.5),
+          borderSide: BorderSide(color: primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: AppDimensions.borderRadius10,
@@ -102,12 +115,12 @@ class AppTheme {
 
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primaryColor,
+          backgroundColor: primary,
           foregroundColor: AppColors.whiteTextColor,
           disabledBackgroundColor: AppColors.disableColor,
           disabledForegroundColor: AppColors.whiteTextColor,
           elevation: 2,
-          shadowColor: AppColors.primaryColor.withValues(alpha: 0.3),
+          shadowColor: primary.withValues(alpha: 0.3),
           shape: RoundedRectangleBorder(
             borderRadius: AppDimensions.borderRadius10,
           ),
@@ -118,8 +131,8 @@ class AppTheme {
 
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.primaryColor,
-          side: const BorderSide(color: AppColors.primaryColor, width: 1.5),
+          foregroundColor: primary,
+          side: BorderSide(color: primary, width: 1.5),
           shape: RoundedRectangleBorder(
             borderRadius: AppDimensions.borderRadius10,
           ),
@@ -130,7 +143,7 @@ class AppTheme {
 
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.primaryColor,
+          foregroundColor: primary,
           padding: AppDimensions.buttonPadding,
           textStyle: AppTypography.medium(AppTypography.md),
         ),
@@ -138,7 +151,7 @@ class AppTheme {
 
       checkboxTheme: CheckboxThemeData(
         fillColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) return AppColors.primaryColor;
+          if (states.contains(WidgetState.selected)) return primary;
           return AppColors.white;
         }),
         checkColor: WidgetStateProperty.all(AppColors.white),
@@ -149,46 +162,44 @@ class AppTheme {
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.all(AppColors.white),
         trackColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) return AppColors.primaryColor;
+          if (states.contains(WidgetState.selected)) return primary;
           return AppColors.switchDisabled;
         }),
       ),
 
       radioTheme: RadioThemeData(
         fillColor: WidgetStateProperty.resolveWith((states) {
-          if (states.contains(WidgetState.selected)) return AppColors.primaryColor;
+          if (states.contains(WidgetState.selected)) return primary;
           return AppColors.gray300;
         }),
       ),
 
-      dividerTheme: const DividerThemeData(
-        color: AppColors.dividerAndBorderColor,
+      dividerTheme: DividerThemeData(
+        color: divider,
         thickness: 1,
         space: 1,
       ),
 
-      iconTheme: const IconThemeData(color: AppColors.primaryColor, size: 24),
+      iconTheme: IconThemeData(color: primary, size: 24),
 
-      progressIndicatorTheme: const ProgressIndicatorThemeData(color: AppColors.primaryColor),
+      progressIndicatorTheme: ProgressIndicatorThemeData(color: primary),
 
-      tabBarTheme: const TabBarThemeData(indicatorColor: AppColors.primaryColor),
+      tabBarTheme: TabBarThemeData(indicatorColor: primary),
 
       colorScheme: isLight
-          ? const ColorScheme.light().copyWith(
-              brightness: Brightness.light,
-              primary: AppColors.primaryColor,
-              surface: AppColors.backgroundColor,
+          ? ColorScheme.light(
+              primary: primary,
+              surface: background,
               onPrimary: AppColors.whiteTextColor,
-              onSurface: AppColors.primaryTextColor,
+              onSurface: primaryText,
               error: AppColors.error,
               onError: AppColors.whiteTextColor,
             )
-          : const ColorScheme.dark().copyWith(
-              brightness: Brightness.dark,
-              primary: AppColors.primaryColor,
-              surface: AppColors.backgroundColor,
+          : ColorScheme.dark(
+              primary: primary,
+              surface: background,
               onPrimary: AppColors.whiteTextColor,
-              onSurface: AppColors.primaryTextColor,
+              onSurface: primaryText,
               error: AppColors.error,
               onError: AppColors.whiteTextColor,
             ),

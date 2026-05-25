@@ -15,10 +15,11 @@ alwaysApply: true
 
 ## Design tokens (never inline a literal)
 
-- Colors: use `AppColors.x` — never `Color(0xFF…)` or `Colors.red` etc. in feature/shared code.
-- Spacing / radius / shadows: use `AppDimensions.spacing*` / `AppDimensions.radius*` / `AppDimensions.*Shadow` — never raw doubles like `12.h` or `BorderRadius.circular(8)`. The shim `app_style.dart` (`defaultPadding`, `AppRadius.standard`, etc.) is allowed for backwards-compat but new code prefers `AppDimensions` directly.
+- Colors: use `AppColors.x` — never `Color(0xFF…)` or `Colors.red` etc. in feature/shared code. For brightness-aware surfaces, add both a light and a dark token (`backgroundColor` + `backgroundDark`, etc.) and let `AppTheme._baseTheme.pick(...)` choose.
+- Spacing / radius / shadows: use `AppDimensions.spacing*` / `AppDimensions.radius*` / `AppDimensions.*Shadow`, OR the convenience shortcuts in `core/theme/app_style.dart` (`defaultPadding`, `AppRadius.standard`, `AppEdgeInsets.all`). Both APIs are valid — `app_style.dart` is a thin passthrough, not a shim. Never inline raw doubles like `12.h` or `BorderRadius.circular(8)`.
 - Text style: use `AppText` widget or `AppTypography.x` tokens — never `TextStyle(fontSize: …, fontWeight: …)` inline.
 - UI state: use `ViewState` + `StateSwitch` for loading/empty/error/success branching — never roll a per-screen state enum.
+- **Strings (visible to users)**: use `I18n.<key>.tr` (from `lib/core/i18n/i18n_keys.dart`). Never inline a string literal in a `Text(...)`, `AppText(...)`, `hintText:`, `label:`, `title:`, snackbar message, dialog title, etc. Adding a key requires editing `assets/i18n/en.json` (+ each other `<lang>.json`) AND `i18n_keys.dart`. Strings that are not user-visible (log tags, route names, storage keys, JSON field names) stay raw — i18n is for UI copy only.
 
 ## Naming (Dart / Flutter)
 

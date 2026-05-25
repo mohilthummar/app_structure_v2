@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import 'package:app_structure/core/constants/app_colors.dart';
 import 'package:app_structure/core/enums/view_state.dart';
+import 'package:app_structure/core/i18n/i18n_keys.dart';
 import 'package:app_structure/core/theme/app_dimensions.dart';
 import 'package:app_structure/core/theme/app_text.dart';
 import 'package:app_structure/core/utils/validators.dart';
@@ -19,7 +20,7 @@ class ForgotPasswordView extends GetView<ForgotPasswordController> {
     return Scaffold(
       backgroundColor: AppColors.backgroundColor,
       appBar: AppBar(
-        title: const Text('Forgot Password'),
+        title: Text(I18n.forgotPasswordTitle.tr),
       ),
       body: SafeArea(
         child: Padding(
@@ -30,15 +31,15 @@ class ForgotPasswordView extends GetView<ForgotPasswordController> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 SizedBox(height: AppDimensions.spacing24.h),
-                const AppText.multiLine(
-                  'Enter your email and we will send a reset link.',
+                AppText.multiLine(
+                  I18n.resetEmailIntro.tr,
                   textSize: TextSize.medium_14,
                 ),
                 SizedBox(height: AppDimensions.spacing16.h),
 
                 AppTextField(
                   controller: controller.emailController,
-                  hintText: 'Email',
+                  hintText: I18n.email.tr,
                   keyboardType: TextInputType.emailAddress,
                   validator: Validators.email,
                 ),
@@ -46,7 +47,7 @@ class ForgotPasswordView extends GetView<ForgotPasswordController> {
 
                 Obx(
                   () => AppButton(
-                    label: 'Send reset link',
+                    label: I18n.sendResetLink.tr,
                     onPressed: controller.onSend,
                     isLoading: controller.state.value == ViewState.loading,
                   ),

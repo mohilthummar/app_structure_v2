@@ -1,5 +1,5 @@
 import 'package:app_structure/core/enums/environment_enums.dart';
-import 'package:app_structure/core/utils/color_print.dart';
+import 'package:app_structure/core/utils/app_logger.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Manages the application's environment configuration.
@@ -29,8 +29,8 @@ class AppEnvironment {
   /// Set environment. Call in main.dart before bootstrap.
   static void setEnvironment(EnvironmentType env) {
     envType = env;
-    AppPrint.data(type: 'APP Environment', text: '${env.label} (${env.slug})');
-    AppPrint.data(type: 'API Base URL', text: baseUrl);
+    AppLogger.data('${env.label} (${env.slug})', tag: 'APP Environment');
+    AppLogger.data(baseUrl, tag: 'API Base URL');
   }
 
   // ── Env Value Reader ──
@@ -91,4 +91,7 @@ class AppEnvironment {
 
   /// Whether Crashlytics is enabled for the current environment
   static bool get enableCrashlytics => _instance.getEnvValue('ENABLE_CRASHLYTICS', fallback: 'false') == 'true';
+
+  /// Whether Firebase Analytics is enabled for the current environment
+  static bool get enableAnalytics => _instance.getEnvValue('ENABLE_ANALYTICS', fallback: 'false') == 'true';
 }
