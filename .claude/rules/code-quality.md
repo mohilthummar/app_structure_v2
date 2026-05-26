@@ -13,10 +13,74 @@ alwaysApply: true
 - WHY comments, never WHAT. If code needs a "what" comment, rename instead.
 - API docs at module boundaries only, not every internal function.
 
+## Commenting
+
+The skeleton has a single consistent comment style. Follow it on every file you touch.
+
+**Always add:**
+
+1. **Class / top-level function docstring** — one paragraph on purpose + when to use, plus a short usage example in a ```dart` fence. This is the only doc a future reader needs to understand what the file is for.
+2. **WHY comments** — non-obvious behaviour the code can't express on its own: ordering constraints ("don't reorder this boot step"), hidden invariants, security guarantees, workarounds for specific bugs, footguns.
+3. **Public API docs at module boundaries** — services, repositories, base classes, shared widgets exported across features. Anything other modules import.
+
+**Don't add:**
+
+1. **WHAT comments that restate the name** — `spacing16` doesn't need `/// 16 logical px.`, `final String label;` doesn't need `/// The label.`, `void onLogin()` doesn't need `/// Called when the user logs in.` If the name carries the meaning, no comment.
+2. **Per-member docs on scale tokens, enum values, or simple DTO fields** — the class docstring is the contract; individual entries are self-describing.
+3. **Per-method WHAT docs on internal helpers** — private methods, build helpers, and per-screen one-offs. Keep the code clean.
+4. **Author / date / "added by X" stamps** — `git blame` / `git log` are authoritative.
+5. **Section dividers without payload** — `// ───── public API ─────` is fine only if it groups ≥3 related items.
+
+**Concrete before / after**
+
+```dart
+// ❌ Per-member WHAT noise
+abstract class AppDimensions {
+  /// 12 logical px.
+  static const double spacing12 = 12;
+
+  /// 16 logical px.
+  static const double spacing16 = 16;
+}
+
+// ✅ Class docstring carries the meaning, names are self-describing
+/// Spacing scale. Use over inline literals so the whole app moves
+/// together when the scale is retuned.
+abstract class AppDimensions {
+  static const double spacing12 = 12;
+  static const double spacing16 = 16;
+}
+```
+
+```dart
+// ❌ Restating the field name
+class AppButton extends StatefulWidget {
+  /// Called when the button is pressed.
+  final VoidCallback? onPressed;
+
+  /// The label of the button.
+  final String? label;
+}
+
+// ✅ Class doc handles the surface; fields speak for themselves
+/// Primary button with elevated / outlined / gradient variants.
+class AppButton extends StatefulWidget {
+  final VoidCallback? onPressed;
+  final String? label;
+}
+```
+
+```dart
+// ✅ WHY comment that earns its keep
+// Firebase init guarded — missing google-services.json / GoogleService-Info.plist
+// is logged and boot continues. Crashlytics + Analytics no-op until config lands.
+try { await Firebase.initializeApp(); } on Object catch (e) { ... }
+```
+
 ## Design tokens (never inline a literal)
 
 - Colors: use `AppColors.x` — never `Color(0xFF…)` or `Colors.red` etc. in feature/shared code. For brightness-aware surfaces, add both a light and a dark token (`backgroundColor` + `backgroundDark`, etc.) and let `AppTheme._baseTheme.pick(...)` choose.
-- Spacing / radius / shadows: use `AppDimensions.spacing*` / `AppDimensions.radius*` / `AppDimensions.*Shadow`, OR the convenience shortcuts in `core/theme/app_style.dart` (`defaultPadding`, `AppRadius.standard`, `AppEdgeInsets.all`). Both APIs are valid — `app_style.dart` is a thin passthrough, not a shim. Never inline raw doubles like `12.h` or `BorderRadius.circular(8)`.
+- Spacing / radius / shadows: use `AppDimensions.spacing*` / `AppDimensions.radius*` / `AppDimensions.*Shadow`, OR the convenience shortcuts in `core/theme/app_dimensions.dart` (`defaultPadding`, `AppRadius.standard`, `AppEdgeInsets.all`). Both APIs are valid — the shortcuts resolve to scale tokens internally. Never inline raw doubles like `12.h` or `BorderRadius.circular(8)`.
 - Text style: use `AppText` widget or `AppTypography.x` tokens — never `TextStyle(fontSize: …, fontWeight: …)` inline.
 - UI state: use `ViewState` + `StateSwitch` for loading/empty/error/success branching — never roll a per-screen state enum.
 - **Strings (visible to users)**: use `I18n.<key>.tr` (from `lib/core/i18n/i18n_keys.dart`). Never inline a string literal in a `Text(...)`, `AppText(...)`, `hintText:`, `label:`, `title:`, snackbar message, dialog title, etc. Adding a key requires editing `assets/i18n/en.json` (+ each other `<lang>.json`) AND `i18n_keys.dart`. Strings that are not user-visible (log tags, route names, storage keys, JSON field names) stay raw — i18n is for UI copy only.

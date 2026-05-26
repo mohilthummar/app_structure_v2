@@ -33,11 +33,9 @@ enum DownloadDestination {
 class DownloadOutcome {
   const DownloadOutcome._({required this.success, this.path, this.error});
 
-  factory DownloadOutcome.success(String path) =>
-      DownloadOutcome._(success: true, path: path);
+  factory DownloadOutcome.success(String path) => DownloadOutcome._(success: true, path: path);
 
-  factory DownloadOutcome.failure(String error) =>
-      DownloadOutcome._(success: false, error: error);
+  factory DownloadOutcome.failure(String error) => DownloadOutcome._(success: false, error: error);
 
   final bool success;
   final String? path;

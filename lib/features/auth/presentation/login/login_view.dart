@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:app_structure/core/constants/app_colors.dart';
 import 'package:app_structure/core/enums/view_state.dart';
 import 'package:app_structure/core/i18n/i18n_keys.dart';
+import 'package:app_structure/core/routing/route_names.dart';
 import 'package:app_structure/core/theme/app_dimensions.dart';
 import 'package:app_structure/core/theme/app_text.dart';
 import 'package:app_structure/core/utils/validators.dart';
@@ -74,6 +75,12 @@ class LoginView extends GetView<LoginController> {
                     onPressed: controller.onLogin,
                     isLoading: controller.state.value == ViewState.loading,
                   ),
+                ),
+                SizedBox(height: AppDimensions.spacing16.h),
+                TextButton.icon(
+                  onPressed: () => Get.toNamed<void>(RouteNames.showcase),
+                  icon: const Icon(Icons.widgets_outlined),
+                  label: Text(I18n.showcase.tr),
                 ),
               ],
             ),

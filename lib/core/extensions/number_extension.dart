@@ -2,299 +2,123 @@ import 'dart:math';
 
 import 'package:intl/intl.dart';
 
-/// Extension on int to provide number formatting capabilities
-/// Formats integers using Indian number system with comma separators
+/// Number formatting + parsing helpers. Tuned for the Indian number
+/// system (lakh / crore grouping like `1,00,000`) — change the locale at
+/// the call site for a different format.
 ///
-/// Example usage:
+/// Usage:
 /// ```dart
-/// class NumberUtils {
-///   void formatInteger(int value) {
-///     String formatted = value.formatNumber(); // Returns "1,00,000"
-///   }
-/// }
+/// 100000.formatNumber();        // '1,00,000'
+/// 1234567.toCompactFormat();    // '12.3L'
+/// '12345.67'.toDouble();        // 12345.67
+/// '12345.67'.formatNumber();    // '12,345.67'
+/// '1500'.compactNumber();       // '1.5K'
+/// '1500'.compactCurrency();     // '₹1.5K'
+/// 75.percentageOf(150);         // 50.0
 /// ```
 extension NumberFormatting on int {
-  /// Formats the integer using Indian number system
-  ///
-  /// Returns a string with comma separators following Indian format
-  /// Example: 100000 becomes "1,00,000"
-  String formatNumber() {
-    final format = NumberFormat('##,##,##,##0', 'en_IN');
-    return format.format(this);
-  }
+  /// Indian grouping, no decimals — `100000` → `1,00,000`.
+  String formatNumber() => NumberFormat('##,##,##,##0', 'en_IN').format(this);
 
-  /// Converts the integer to a compact format
-  ///
-  /// Returns a string like "1K", "1M", "1B" for large numbers
-  /// Example: 1000 becomes "1K", 1000000 becomes "1M"
-  String toCompactFormat() {
-    return NumberFormat.compact(locale: 'en-INR').format(this);
-  }
+  /// Compact form — `1000` → `1K`, `1000000` → `10L` (Indian compact).
+  String toCompactFormat() => NumberFormat.compact(locale: 'en-INR').format(this);
 
-  /// Checks if the number is positive
   bool get isPositive => this > 0;
-
-  /// Checks if the number is negative
   bool get isNegative => this < 0;
-
-  /// Checks if the number is zero
   bool get isZero => this == 0;
-
-  /// Checks if the number is even
-  bool get isEven => this % 2 == 0;
-
-  /// Checks if the number is odd
-  bool get isOdd => this % 2 != 0;
 }
 
-/// Extension on double to provide number formatting capabilities
-/// Formats doubles using Indian number system with decimal places
-///
-/// Example usage:
-/// ```dart
-/// class NumberUtils {
-///   void formatDouble(double value) {
-///     String formatted = value.formatNumber(); // Returns "1,00,000.50"
-///   }
-/// }
-/// ```
 extension NumberDoubleFormatting on double {
-  /// Formats the double using Indian number system with 2 decimal places
-  ///
-  /// Returns a string with comma separators and decimal places
-  /// Example: 100000.5 becomes "1,00,000.50"
-  String formatNumber() {
-    final format = NumberFormat('##,##,##,##0.00', 'en_IN');
-    return format.format(this);
-  }
+  /// Indian grouping with 2 decimals — `100000.5` → `1,00,000.50`.
+  String formatNumber() => NumberFormat('##,##,##,##0.00', 'en_IN').format(this);
 
-  /// Formats the double with specified decimal places
-  ///
-  /// [decimals] - Number of decimal places to show
-  /// Returns a formatted string with specified decimal places
+  /// Indian grouping with [decimals] decimal places.
   String formatNumberWithDecimals(int decimals) {
-    final format = NumberFormat("##,##,##,##0.${'0' * decimals}", 'en_IN');
-    return format.format(this);
+    return NumberFormat("##,##,##,##0.${'0' * decimals}", 'en_IN').format(this);
   }
 
-  /// Converts the double to a compact format
-  ///
-  /// Returns a string like "1.5K", "2.3M" for large numbers
-  String toCompactFormat() {
-    return NumberFormat.compact(locale: 'en-INR').format(this);
-  }
+  String toCompactFormat() => NumberFormat.compact(locale: 'en-INR').format(this);
 
-  /// Rounds the double to specified decimal places
-  ///
-  /// [decimals] - Number of decimal places to round to
-  /// Returns a double rounded to specified decimal places
+  /// Round to [decimals] decimal places.
   double roundToDecimals(int decimals) {
-    final double multiplier = pow(10.0, decimals).toDouble();
+    final multiplier = pow(10.0, decimals).toDouble();
     return (this * multiplier).round() / multiplier;
   }
 
-  /// Checks if the number is positive
   bool get isPositive => this > 0;
-
-  /// Checks if the number is negative
   bool get isNegative => this < 0;
-
-  /// Checks if the number is zero
   bool get isZero => this == 0;
-
-  /// Checks if the number is an integer
   bool get isInteger => this == toInt();
 }
 
-/// Extension on String to provide number parsing and formatting capabilities
-/// Converts strings to numbers and formats them appropriately
-///
-/// Example usage:
-/// ```dart
-/// class StringUtils {
-///   void parseNumber(String value) {
-///     double number = value.toDouble(); // Converts "123.45" to 123.45
-///     String formatted = value.formatNumber(); // Returns "123.45"
-///   }
-/// }
-/// ```
+/// String → number parsing + formatting. Use `*OrNull` variants when the
+/// input may be malformed and you don't want an exception.
 extension StringFormatting on String {
-  /// Formats the string as a number using Indian number system
-  ///
-  /// Parses the string as double and formats it with 2 decimal places
-  /// Returns a formatted string or "0.00" if parsing fails
+  /// Parse + format with Indian grouping + 2 decimals. Returns `'0.00'`
+  /// on parse failure.
   String formatNumber() {
     try {
-      final format = NumberFormat('##,##,##,##0.00', 'en_IN');
-      return format.format(double.parse(this));
-    } catch (e) {
+      return NumberFormat('##,##,##,##0.00', 'en_IN').format(double.parse(this));
+    } catch (_) {
       return '0.00';
     }
   }
 
-  /// Converts the string to a double
-  ///
-  /// Returns the parsed double value
-  /// Throws FormatException if the string cannot be parsed
-  double toDouble() {
-    return double.parse(this);
-  }
+  double toDouble() => double.parse(this);
+  num toNum() => num.parse(this);
+  int toInt() => int.parse(this);
 
-  /// Converts the string to a num (int or double)
-  ///
-  /// Returns the parsed num value
-  /// Throws FormatException if the string cannot be parsed
-  num toNum() {
-    return num.parse(this);
-  }
+  double? toDoubleOrNull() => double.tryParse(this);
+  int? toIntOrNull() => int.tryParse(this);
 
-  /// Converts the string to an integer
-  ///
-  /// Returns the parsed integer value
-  /// Throws FormatException if the string cannot be parsed
-  int toInt() {
-    return int.parse(this);
-  }
+  bool get isNumeric => double.tryParse(this) != null;
+  bool get isInteger => int.tryParse(this) != null;
 
-  /// Safely converts the string to a double
-  ///
-  /// Returns the parsed double value or null if parsing fails
-  double? toDoubleOrNull() {
-    return double.tryParse(this);
-  }
-
-  /// Safely converts the string to an integer
-  ///
-  /// Returns the parsed integer value or null if parsing fails
-  int? toIntOrNull() {
-    return int.tryParse(this);
-  }
-
-  /// Checks if the string can be parsed as a number
-  ///
-  /// Returns true if the string represents a valid number, false otherwise
-  bool get isNumeric {
-    return double.tryParse(this) != null;
-  }
-
-  /// Checks if the string can be parsed as an integer
-  ///
-  /// Returns true if the string represents a valid integer, false otherwise
-  bool get isInteger {
-    return int.tryParse(this) != null;
-  }
-
-  /// Removes all non-numeric characters from the string
-  ///
-  /// Returns a string containing only digits and decimal points
-  String get numericOnly {
-    return replaceAll(RegExp(r'[^0-9.]'), '');
-  }
+  /// Strips everything except digits and the decimal point.
+  String get numericOnly => replaceAll(RegExp(r'[^0-9.]'), '');
 }
 
-/// Extension on String to provide compact number formatting
-/// Formats large numbers into compact form (K, M, B, etc.)
-///
-/// Example usage:
-/// ```dart
-/// class CompactUtils {
-///   void formatLargeNumber(String value) {
-///     String compact = value.compactNumber(); // Returns "1.2K" for "1200"
-///   }
-/// }
-/// ```
+/// String → compact number formatting. Parses, then formats — handy for
+/// stringly-typed APIs that ship counts as strings.
 extension NumberCompactFormatting on String {
-  /// Converts the string to a compact number format
-  ///
-  /// Parses the string as double and formats it in compact form
-  /// Returns a string like "1.2K", "3.4M", "2.1B" for large numbers
-  /// Returns "0" if parsing fails
+  /// `'1500'` → `'1.5K'`. Returns `'0'` on parse failure.
   String compactNumber() {
-    // Convert number into double to be formatted
-    // Default to zero if unable to do so
-    final double doubleNumber = double.tryParse(this) ?? 0;
-
-    // Set number format to use
-    final NumberFormat numberFormat = NumberFormat.compact(locale: 'en-INR');
-
-    return numberFormat.format(doubleNumber);
+    final n = double.tryParse(this) ?? 0;
+    return NumberFormat.compact(locale: 'en-INR').format(n);
   }
 
-  /// Converts the string to a compact number format with custom locale
-  ///
-  /// [locale] - The locale to use for formatting (e.g., "en-US", "en-INR")
-  /// Returns a compact formatted string
   String compactNumberWithLocale(String locale) {
-    final double doubleNumber = double.tryParse(this) ?? 0;
-    final NumberFormat numberFormat = NumberFormat.compact(locale: locale);
-    return numberFormat.format(doubleNumber);
+    final n = double.tryParse(this) ?? 0;
+    return NumberFormat.compact(locale: locale).format(n);
   }
 
-  /// Formats the string as currency in compact form
-  ///
-  /// Returns a string like "₹1.2K", "$3.4M" for currency values
+  /// `'1500'` → `'₹1.5K'`. Compact Indian currency.
   String compactCurrency() {
-    final double doubleNumber = double.tryParse(this) ?? 0;
-    final NumberFormat currencyFormat = NumberFormat.compactCurrency(locale: 'en-INR');
-    return currencyFormat.format(doubleNumber);
+    final n = double.tryParse(this) ?? 0;
+    return NumberFormat.compactCurrency(locale: 'en-INR').format(n);
   }
 }
 
-/// Extension on num to provide additional number utilities
-/// Works with both int and double values
-///
-/// Example usage:
-/// ```dart
-/// class NumUtils {
-///   void formatAnyNumber(num value) {
-///     String formatted = value.toIndianFormat(); // Returns "1,00,000"
-///   }
-/// }
-/// ```
+/// Works on both `int` and `double` — pick this when the type isn't known
+/// at the call site.
 extension NumFormatting on num {
-  /// Formats the number using Indian number system
-  ///
-  /// Automatically handles both integers and doubles
-  /// Returns a formatted string with appropriate decimal places
+  /// Indian grouping. No decimals for ints, 2 decimals for doubles.
   String toIndianFormat() {
-    if (this is int) {
-      return NumberFormat('##,##,##,##0', 'en_IN').format(this);
-    } else {
-      return NumberFormat('##,##,##,##0.00', 'en_IN').format(this);
-    }
+    if (this is int) return NumberFormat('##,##,##,##0', 'en_IN').format(this);
+    return NumberFormat('##,##,##,##0.00', 'en_IN').format(this);
   }
 
-  /// Converts the number to a compact format
-  ///
-  /// Returns a string like "1K", "1.5M" for large numbers
-  String toCompactFormat() {
-    return NumberFormat.compact(locale: 'en-INR').format(this);
-  }
+  String toCompactFormat() => NumberFormat.compact(locale: 'en-INR').format(this);
 
-  /// Checks if the number is within a specified range
-  ///
-  /// [min] - Minimum value (inclusive)
-  /// [max] - Maximum value (inclusive)
-  /// Returns true if the number is within the range, false otherwise
-  bool isInRange(num min, num max) {
-    return this >= min && this <= max;
-  }
+  bool isInRange(num min, num max) => this >= min && this <= max;
 
-  /// Clamps the number to a specified range
-  ///
-  /// [min] - Minimum value
-  /// [max] - Maximum value
-  /// Returns the number clamped to the specified range
   num clampToRange(num min, num max) {
     if (this < min) return min;
     if (this > max) return max;
     return this;
   }
 
-  /// Calculates the percentage of this number relative to a total
-  ///
-  /// [total] - The total value to calculate percentage against
-  /// Returns the percentage as a double (0.0 to 100.0)
+  /// Percentage of [total], `0.0` … `100.0`. Returns `0.0` when total is zero.
   double percentageOf(num total) {
     if (total == 0) return 0.0;
     return (this / total) * 100;

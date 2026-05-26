@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 
 import 'package:app_structure/core/constants/app_colors.dart';
 import 'package:app_structure/core/i18n/i18n_keys.dart';
+import 'package:app_structure/core/routing/route_names.dart';
 import 'package:app_structure/core/theme/app_dimensions.dart';
 import 'package:app_structure/core/theme/app_text.dart';
 import 'package:app_structure/features/home/presentation/profile/profile_controller.dart';
@@ -37,6 +38,20 @@ class ProfileView extends GetView<ProfileController> {
           _LanguagePicker(controller: controller),
           SizedBox(height: AppDimensions.spacing24.h),
           _VersionTile(controller: controller),
+          SizedBox(height: AppDimensions.spacing16.h),
+          Card(
+            child: ListTile(
+              leading: const Icon(Icons.widgets_outlined),
+              title: AppText(I18n.showcase.tr),
+              subtitle: AppText(
+                I18n.openShowcase.tr,
+                textSize: TextSize.small_12,
+                textColor: AppColors.darkGreyTextColor,
+              ),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Get.toNamed<void>(RouteNames.showcase),
+            ),
+          ),
           SizedBox(height: AppDimensions.spacing32.h),
           OutlinedButton.icon(
             onPressed: controller.onLogout,
@@ -167,9 +182,7 @@ class _LanguagePicker extends StatelessWidget {
               if (i > 0) const Divider(height: 1),
               ListTile(
                 title: AppText(_displayName(controller.supportedLocales[i])),
-                trailing: current.languageCode == controller.supportedLocales[i].languageCode
-                    ? const Icon(Icons.check)
-                    : null,
+                trailing: current.languageCode == controller.supportedLocales[i].languageCode ? const Icon(Icons.check) : null,
                 onTap: () => controller.onChangeLocale(controller.supportedLocales[i]),
               ),
             ],

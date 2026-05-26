@@ -1,11 +1,15 @@
+/// Barrel for `lib/core/utils`. Import this file when you need several
+/// helpers at once; import individual files when you only need one.
+library;
+
 export 'app_loader.dart';
 export 'app_logger.dart';
+export 'app_scroll_behavior.dart';
+export 'app_shimmers.dart';
 export 'app_snack_bar.dart';
+export 'app_system_ui.dart';
+export 'file_picker_helper.dart';
 export 'formatters/formatters.dart';
-export 'image_sheet.dart';
-export 'shimmer_utils.dart';
-export 'stretch_scroll_behavior.dart';
-export 'ui_utils.dart';
-
-// This file has been refactored. Please use the new utility files for future development.
-// Deprecated: Use device_utils.dart, toast_utils.dart, date_utils.dart, file_utils.dart, media_utils.dart instead.
+export 'image_picker_helper.dart';
+export 'string_utils.dart';
+export 'validators.dart';

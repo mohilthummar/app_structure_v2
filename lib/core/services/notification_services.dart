@@ -129,9 +129,7 @@ class NotificationService {
       onDidReceiveNotificationResponse: (resp) => _onLocalTap(resp.payload),
     );
 
-    await _local
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-        ?.createNotificationChannel(_channel);
+    await _local.resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()?.createNotificationChannel(_channel);
   }
 
   Future<void> _wireFcm() async {

@@ -1,4 +1,4 @@
-import 'package:app_structure/core/theme/app_style.dart';
+import 'package:app_structure/core/theme/app_dimensions.dart';
 import 'package:app_structure/core/theme/app_text.dart';
 import 'package:app_structure/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';
@@ -8,92 +8,55 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:app_structure/shared/widgets/bottom_border_container.dart';
 
-/// A customizable, performant text field with label, prefix/suffix icons, and error handling.
+/// The app's primary text input. Wraps Flutter's `TextFormField` with a
+/// label, prefix / suffix icon slots, focus-aware border colouring, and
+/// error rendering. [prefixIcon] / [suffixIcon] accept an asset path
+/// (SVG / PNG) or a `Widget` — strings are dispatched to the appropriate
+/// loader.
 ///
 /// Usage:
 /// ```dart
 /// AppTextField(
-///   controller: myController,
+///   controller: controller.emailController,
 ///   label: 'Email',
-///   hintText: 'Enter your email',
-///   prefixIcon: AppIcons.email,
-///   onChanged: (val) {},
-/// )
+///   hintText: 'name@example.com',
+///   keyboardType: TextInputType.emailAddress,
+///   validator: Validators.email,
+/// );
 /// ```
 class AppTextField extends StatefulWidget {
-  /// Controls the text being edited.
   final TextEditingController? controller;
-
-  /// Label displayed above the field.
   final String? label;
 
-  /// Icon to display at the start. Asset path (SVG/PNG) or widget.
+  /// Asset path (SVG / PNG) or a `Widget`.
   final dynamic prefixIcon;
 
-  /// Icon to display at the end. Asset path (SVG/PNG) or widget.
+  /// Asset path (SVG / PNG) or a `Widget`.
   final dynamic suffixIcon;
 
-  /// Called when the suffix icon is tapped.
   final VoidCallback? onSuffixIconTap;
-
-  /// Validator for the field value.
   final String? Function(String?)? validator;
-
-  /// Placeholder text.
   final String? hintText;
 
-  /// Error text to display (overrides validator).
+  /// Forced error text — bypasses [validator] when non-null.
   final String? errorText;
 
-  /// Style for the input text.
   final TextStyle? textStyle;
-
-  /// Style for the hint text.
   final TextStyle? hintStyle;
-
-  /// Text alignment.
   final TextAlign textAlign;
-
-  /// Keyboard action button.
   final TextInputAction textInputAction;
-
-  /// Input formatters.
   final List<TextInputFormatter>? inputFormatters;
-
-  /// Keyboard type.
   final TextInputType keyboardType;
-
-  /// Max lines for the field.
   final int maxLines;
-
-  /// Min lines for the field.
   final int minLines;
-
-  /// Max length of input.
   final int? maxLength;
-
-  /// Obscure text (for passwords).
   final bool obscureText;
-
-  /// Called when the text changes.
   final ValueChanged<String>? onChanged;
-
-  /// Called when the field is tapped.
   final VoidCallback? onTap;
-
-  /// Called when the user submits the field.
   final ValueChanged<String>? onSubmitted;
-
-  /// Whether the field is enabled.
   final bool enabled;
-
-  /// Whether the field is read-only.
   final bool readOnly;
-
-  /// Whether to autofocus the field.
   final bool autofocus;
-
-  /// Color for the suffix icon.
   final Color? suffixIconColor;
 
   const AppTextField({

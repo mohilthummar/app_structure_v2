@@ -1,4 +1,4 @@
-import 'package:app_structure/core/theme/app_style.dart';
+import 'package:app_structure/core/theme/app_dimensions.dart';
 import 'package:app_structure/core/theme/app_text.dart';
 import 'package:app_structure/core/constants/app_colors.dart';
 import 'package:flutter/material.dart';

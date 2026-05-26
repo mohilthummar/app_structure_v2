@@ -10,7 +10,7 @@ import 'package:app_structure/core/routing/app_pages.dart';
 import 'package:app_structure/core/routing/route_names.dart';
 import 'package:app_structure/core/services/analytics_service.dart';
 import 'package:app_structure/core/theme/app_theme.dart';
-import 'package:app_structure/core/utils/stretch_scroll_behavior.dart';
+import 'package:app_structure/core/utils/app_scroll_behavior.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         debugShowCheckedModeBanner: false,
-        scrollBehavior: ScrollBehaviorModified(),
+        scrollBehavior: AppScrollBehavior(),
         getPages: AppPages.pages,
         initialRoute: RouteNames.splash,
         navigatorObservers: [analytics.observer],

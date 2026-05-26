@@ -9,4 +9,8 @@ abstract class RouteNames {
   // Protected (require AuthMiddleware)
   static const String home = '/home';
   static const String profile = '/profile';
+
+  // Developer / preview — public so the gallery is reachable without a
+  // session. Used to eyeball every shared widget + utility in one place.
+  static const String showcase = '/showcase';
 }

@@ -1,7 +1,7 @@
 import 'package:app_structure/core/config/api_urls.dart';
 import 'package:app_structure/core/config/app_environment.dart';
 import 'package:app_structure/core/constants/app_constants.dart';
-import 'package:app_structure/core/network/api_response.dart';
+import 'package:app_structure/core/network/base_response.dart';
 import 'package:app_structure/core/network/auth_interceptor.dart';
 import 'package:app_structure/core/network/token_refresh_interceptor.dart';
 import 'package:app_structure/core/storage/secure_storage.dart';
@@ -12,7 +12,7 @@ import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 /// Long-lived HTTP client. One `Dio` per app lifetime, interceptors attached
 /// once. DataSources call `get/post/put/patch/delete/uploadFile` and receive
-/// `ApiResponse<T>` — they throw on `!response.success`.
+/// `BaseResponse<T>` — they throw on `!response.success`.
 ///
 /// Registered as a lazy/fenix service in `InitialBinding`.
 class ApiClient {
@@ -50,7 +50,7 @@ class ApiClient {
 
   String _versionedPath(String path, String? version) => '/${version ?? ApiUrls.apiV1}$path';
 
-  Future<ApiResponse<T>> get<T>(
+  Future<BaseResponse<T>> get<T>(
     String path, {
     Map<String, dynamic>? queryParameters,
     T Function(dynamic)? fromJson,
@@ -65,7 +65,7 @@ class ApiClient {
     fromJson: fromJson,
   );
 
-  Future<ApiResponse<T>> post<T>(
+  Future<BaseResponse<T>> post<T>(
     String path, {
     dynamic data,
     Map<String, dynamic>? queryParameters,
@@ -82,7 +82,7 @@ class ApiClient {
     fromJson: fromJson,
   );
 
-  Future<ApiResponse<T>> put<T>(
+  Future<BaseResponse<T>> put<T>(
     String path, {
     dynamic data,
     Map<String, dynamic>? queryParameters,
@@ -99,7 +99,7 @@ class ApiClient {
     fromJson: fromJson,
   );
 
-  Future<ApiResponse<T>> patch<T>(
+  Future<BaseResponse<T>> patch<T>(
     String path, {
     dynamic data,
     Map<String, dynamic>? queryParameters,
@@ -116,7 +116,7 @@ class ApiClient {
     fromJson: fromJson,
   );
 
-  Future<ApiResponse<T>> delete<T>(
+  Future<BaseResponse<T>> delete<T>(
     String path, {
     dynamic data,
     Map<String, dynamic>? queryParameters,
@@ -135,7 +135,7 @@ class ApiClient {
 
   /// Multipart upload. Defaults to POST; pass `method: 'PUT'`/`'PATCH'` for
   /// endpoints that take multipart over a different verb.
-  Future<ApiResponse<T>> uploadFile<T>(
+  Future<BaseResponse<T>> uploadFile<T>(
     String path, {
     required FormData formData,
     T Function(dynamic)? fromJson,
@@ -178,7 +178,7 @@ class ApiClient {
     );
   }
 
-  Future<ApiResponse<T>> _request<T>(
+  Future<BaseResponse<T>> _request<T>(
     Future<Response<dynamic>> Function() request, {
     T Function(dynamic)? fromJson,
   }) async {
@@ -188,21 +188,21 @@ class ApiClient {
 
       if (fromJson != null && data is Map<String, dynamic>) {
         final parsed = data['data'] != null ? fromJson(data['data']) : fromJson(data);
-        return ApiResponse.fromSuccess(
+        return BaseResponse.fromSuccess(
           parsed,
           message: data['message'] as String?,
         );
       }
 
-      return ApiResponse<T>(
+      return BaseResponse<T>(
         success: true,
         data: data is T ? data : null,
         message: data is Map<String, dynamic> ? data['message'] as String? : null,
       );
     } on DioException catch (e) {
-      return ApiResponse.fromError(ApiErrorModel.fromDioException(e));
+      return BaseResponse.fromError(ApiErrorModel.fromDioException(e));
     } catch (e) {
-      return ApiResponse.fromError(
+      return BaseResponse.fromError(
         ApiErrorModel(message: e.toString()),
       );
     }

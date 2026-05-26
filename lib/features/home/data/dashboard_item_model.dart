@@ -30,13 +30,12 @@ class DashboardItem {
     if (imageUrl != null) 'image_url': imageUrl,
   };
 
-  DashboardItem copyWith({String? id, String? title, String? subtitle, String? imageUrl}) =>
-      DashboardItem(
-        id: id ?? this.id,
-        title: title ?? this.title,
-        subtitle: subtitle ?? this.subtitle,
-        imageUrl: imageUrl ?? this.imageUrl,
-      );
+  DashboardItem copyWith({String? id, String? title, String? subtitle, String? imageUrl}) => DashboardItem(
+    id: id ?? this.id,
+    title: title ?? this.title,
+    subtitle: subtitle ?? this.subtitle,
+    imageUrl: imageUrl ?? this.imageUrl,
+  );
 }
 
 /// One page of dashboard results. Mirrors the typical paginated REST
@@ -56,10 +55,7 @@ class DashboardPage {
     final raw = json['items'] ?? json['data'] ?? const <dynamic>[];
     final list = raw is List ? raw : const <dynamic>[];
     return DashboardPage(
-      items: list
-          .whereType<Map<String, dynamic>>()
-          .map(DashboardItem.fromJson)
-          .toList(growable: false),
+      items: list.whereType<Map<String, dynamic>>().map(DashboardItem.fromJson).toList(growable: false),
       page: (json['page'] as num?)?.toInt() ?? 1,
       hasMore: (json['has_more'] as bool?) ?? (json['hasMore'] as bool?) ?? false,
     );

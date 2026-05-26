@@ -38,7 +38,7 @@ class AppColors {
   static const Color dayLeftColor = Color(0xffFF6174);
 
   // ════════════════════════════════════════════════════════════════════════
-  // Skeleton design tokens (added in skeleton-update from happypet)
+  // Skeleton design tokens
   // ════════════════════════════════════════════════════════════════════════
 
   // Orange brand scale

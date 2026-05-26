@@ -16,6 +16,8 @@
   "common.error": "कुछ गलत हो गया",
 
   "home.logout": "लॉग आउट",
+  "home.showcase": "कंपोनेंट शोकेस",
+  "home.openShowcase": "कंपोनेंट शोकेस खोलें",
 
   "settings.theme": "थीम",
   "settings.language": "भाषा"

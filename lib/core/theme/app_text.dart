@@ -4,69 +4,44 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:app_structure/core/constants/app_colors.dart';
 import 'package:app_structure/core/theme/app_typography.dart';
 
-/// Enum defining different text sizes available in the app
-/// Each size corresponds to a specific font size in logical pixels
+/// Text size buckets used by [AppText]. Each maps to an [AppTypography]
+/// size token; `.sp` scaling is applied at render time.
 enum TextSize {
-  extraSmall_10, // 10sp - for very small text like captions
-  small_12, // 12sp - for small text like body text
-  medium_14, // 14sp - for medium text like descriptions
-  large_16, // 16sp - for large text like subheadings
-  title_18, // 18sp - for titles
-  largeTitle_20, // 20sp - for large titles
-  headline_24, // 24sp - for headlines
+  extraSmall_10,
+  small_12,
+  medium_14,
+  large_16,
+  title_18,
+  largeTitle_20,
+  headline_24,
 }
 
-/// Enum defining different font weights available in the app
-enum TextWeight {
-  w400, // Normal weight
-  w500, // Medium weight
-  w600, // Semi-bold weight
-}
+/// Text weight buckets used by [AppText].
+enum TextWeight { w400, w500, w600 }
 
-/// A customizable text widget that provides consistent typography across the app
+/// App-wide text widget. Wraps Flutter's `Text` with [TextSize] +
+/// [TextWeight] tokens so every label, body, and title in the app uses
+/// the same scale.
 ///
-/// This widget wraps Flutter's Text widget with predefined styles and sizes
-/// to maintain consistency throughout the application. It supports various
-/// text sizes, weights, colors, and alignment options.
+/// Reach for the multi-line constructor only when you need wrapping —
+/// the default constructor truncates with ellipsis at 1 line.
 ///
-/// Example usage:
+/// Usage:
 /// ```dart
-/// AppText(
-///   'Hello World',
-///   textSize: TextSize.large_16,
-///   textWeight: TextWeight.w500,
-///   textColor: Colors.blue,
-/// )
+/// AppText('Continue', textSize: TextSize.medium_14, textWeight: TextWeight.w500);
+/// AppText.multiLine(longBody, textSize: TextSize.medium_14, maxLines: 3);
 /// ```
 class AppText extends StatelessWidget {
-  /// The text content to display
   final String text;
-
-  /// The size of the text (defaults to small_12)
   final TextSize? textSize;
-
-  /// The weight of the text (defaults to w400)
   final TextWeight? textWeight;
-
-  /// The color of the text (defaults to AppColors.primaryTextColor)
   final Color? textColor;
-
-  /// Whether the text should support multiple lines (defaults to false)
   final bool? multiLine;
-
-  /// The alignment of the text (defaults to TextAlign.left)
   final TextAlign? textAlign;
-
-  /// Text decoration like underline, strikethrough, etc.
   final TextDecoration? textDecoration;
-
-  /// Maximum number of lines for the text (null for unlimited)
   final int? maxLines;
-
-  /// Text overflow behavior
   final TextOverflow? overflow;
 
-  /// Constructor for single-line text
   const AppText(
     this.text, {
     super.key,
@@ -77,10 +52,9 @@ class AppText extends StatelessWidget {
     this.textAlign = TextAlign.left,
     this.textDecoration,
     this.maxLines,
-    this.overflow, //
+    this.overflow,
   });
 
-  /// Constructor for multi-line text
   const AppText.multiLine(
     this.text, {
     super.key,
@@ -90,7 +64,7 @@ class AppText extends StatelessWidget {
     this.textAlign = TextAlign.left,
     this.textDecoration,
     this.maxLines,
-    this.overflow, //
+    this.overflow,
   }) : multiLine = true;
 
   @override
@@ -100,11 +74,14 @@ class AppText extends StatelessWidget {
       maxLines: maxLines ?? (multiLine! ? null : 1),
       textAlign: textAlign,
       overflow: overflow ?? (multiLine! ? TextOverflow.visible : TextOverflow.ellipsis),
-      style: textStyle!.copyWith(color: textColor, fontWeight: fontWeight, decoration: textDecoration ?? TextDecoration.none),
+      style: textStyle!.copyWith(
+        color: textColor,
+        fontWeight: fontWeight,
+        decoration: textDecoration ?? TextDecoration.none,
+      ),
     );
   }
 
-  /// Returns the appropriate FontWeight based on the textWeight enum
   FontWeight? get fontWeight {
     switch (textWeight) {
       case TextWeight.w400:
@@ -118,9 +95,6 @@ class AppText extends StatelessWidget {
     }
   }
 
-  /// Returns the appropriate TextStyle based on the textSize enum.
-  /// Maps each `TextSize` value to an `AppTypography` token and applies
-  /// `.sp` scaling from `flutter_screenutil` at the call site.
   TextStyle? get textStyle {
     final base = switch (textSize) {
       TextSize.extraSmall_10 => AppTypography.xxs,

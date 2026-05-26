@@ -1,12 +1,11 @@
-import 'package:app_structure/core/theme/app_style.dart';
-import 'package:app_structure/core/utils/app_loader.dart';
 import 'package:app_structure/core/constants/app_colors.dart';
+import 'package:app_structure/core/theme/app_dimensions.dart';
+import 'package:app_structure/core/theme/app_text.dart';
+import 'package:app_structure/core/utils/app_loader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
-
-import 'package:app_structure/core/theme/app_text.dart';
 
 /// Button type for AppButton
 enum ButtonType { elevated, outline, gradient }
@@ -14,6 +13,20 @@ enum ButtonType { elevated, outline, gradient }
 /// Image alignment for AppButton
 enum ImageAlign { start, end, startTitle, endTitle }
 
+/// The app's primary button. Three visual styles via [ButtonType] and a
+/// named [AppButton.outlined] constructor for the most common outlined
+/// case. Combine [icon] / [image] with [imageAlign] to put affordances on
+/// either side of the label.
+///
+/// Usage:
+/// ```dart
+/// AppButton(
+///   onPressed: controller.onSignIn,
+///   label: I18n.signIn.tr,
+///   isLoading: controller.state.value.isLoading,
+/// );
+/// AppButton.outlined(onPressed: ..., label: 'Cancel');
+/// ```
 class AppButton extends StatefulWidget {
   final VoidCallback? onPressed;
   final VoidCallback? onLongPress;

@@ -38,6 +38,8 @@
   "home.dashboard": "Dashboard",
   "home.profile": "Profile",
   "home.logout": "Log out",
+  "home.showcase": "Component Showcase",
+  "home.openShowcase": "Open component showcase",
 
   "settings.theme": "Theme",
   "settings.themeLight": "Light",

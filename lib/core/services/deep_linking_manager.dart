@@ -32,8 +32,7 @@ class DeepLinkIntent {
 /// associated domains) is on you — see the `app_links` README. This
 /// class just consumes whatever the platform delivers.
 class DeepLinkService {
-  DeepLinkService({Set<String>? allowedPaths})
-    : _allowedPaths = allowedPaths ?? const {};
+  DeepLinkService({Set<String>? allowedPaths}) : _allowedPaths = allowedPaths ?? const {};
 
   /// Path prefixes the app is willing to act on. Empty set = drop
   /// everything (safe default for a fresh skeleton). Extend by passing

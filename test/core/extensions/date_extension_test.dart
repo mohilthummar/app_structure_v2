@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:app_structure/core/utils/date_utils.dart';
+import 'package:app_structure/core/extensions/date_extension.dart';
 
 void main() {
   group('AppDateUtils.formatDate', () {

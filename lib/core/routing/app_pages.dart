@@ -12,6 +12,8 @@ import 'package:app_structure/features/home/presentation/dashboard/dashboard_bin
 import 'package:app_structure/features/home/presentation/dashboard/dashboard_view.dart';
 import 'package:app_structure/features/home/presentation/profile/profile_bindings.dart';
 import 'package:app_structure/features/home/presentation/profile/profile_view.dart';
+import 'package:app_structure/features/showcase/presentation/showcase_bindings.dart';
+import 'package:app_structure/features/showcase/presentation/showcase_view.dart';
 
 /// Single source of truth for every `GetPage`. `GetMaterialApp.getPages`
 /// reads this list. Navigate with `Get.toNamed`, `Get.offNamed`,
@@ -36,6 +38,11 @@ abstract class AppPages {
       name: RouteNames.forgotPassword,
       page: () => const ForgotPasswordView(),
       binding: ForgotPasswordBindings(),
+    ),
+    GetPage(
+      name: RouteNames.showcase,
+      page: () => const ShowcaseView(),
+      binding: ShowcaseBindings(),
     ),
 
     // ── Protected ──────────────────────────────────────────────────────

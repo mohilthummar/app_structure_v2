@@ -9,7 +9,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get_utils/get_utils.dart';
 
 import 'package:app_structure/core/utils/app_loader.dart';
-import 'package:app_structure/core/utils/shimmer_utils.dart';
+import 'package:app_structure/core/utils/app_shimmers.dart';
 
 class AppImageView extends StatelessWidget {
   ///[imagePath] is required parameter for showing image
@@ -179,8 +179,8 @@ class AppImageView extends StatelessWidget {
   }
 
   Widget placeHolderWidget() {
-    return shimmerWrapper(
-      child: shimmerContainer(
+    return AppShimmers.wrap(
+      child: AppShimmers.box(
         width: width ?? double.infinity,
         height: height ?? double.infinity,
         borderRadius: borderRadius,

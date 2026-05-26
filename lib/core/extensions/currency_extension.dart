@@ -1,103 +1,70 @@
 import 'package:intl/intl.dart';
 
-/// Extension on int to provide currency formatting capabilities
-/// Formats integers as Indian currency with the ₹ symbol and comma separators
+/// Indian-rupee currency formatting on `int`, `double`, `num`, and `String`.
 ///
-/// Example usage:
+/// Defaults: locale `en_IN`, symbol `₹`, 0 decimals for ints / 2 for doubles.
+/// Override at the call site for other currencies or precision.
+///
+/// Usage:
 /// ```dart
-/// int amount = 100000;
-/// String formatted = amount.toCurrency(); // Returns "₹1,00,000"
+/// 100000.toCurrency();              // '₹1,00,000'
+/// 123456.78.toCurrency();           // '₹1,23,456.78'
+/// 50000.5.toCompactCurrency();      // '₹50K'
+/// '12345.67'.toCurrency();          // '₹12,345.67'
+/// 100.toCurrency(symbol: '\$', locale: 'en_US'); // '$100'
 /// ```
 extension CurrencyIntFormatting on int {
-  /// Formats the integer as Indian currency (₹1,00,000)
   String toCurrency({String locale = 'en_IN', String symbol = '₹'}) {
-    final format = NumberFormat.currency(locale: locale, symbol: symbol, decimalDigits: 0);
-    return format.format(this);
+    return NumberFormat.currency(locale: locale, symbol: symbol, decimalDigits: 0).format(this);
   }
 
-  /// Formats the integer as compact Indian currency (₹1K, ₹1L, etc.)
   String toCompactCurrency({String locale = 'en-INR', String symbol = '₹'}) {
-    final format = NumberFormat.compactCurrency(locale: locale, symbol: symbol, decimalDigits: 0);
-    return format.format(this);
+    return NumberFormat.compactCurrency(locale: locale, symbol: symbol, decimalDigits: 0).format(this);
   }
 }
 
-/// Extension on double to provide currency formatting capabilities
-/// Formats doubles as Indian currency with the ₹ symbol, comma separators, and decimals
-///
-/// Example usage:
-/// ```dart
-/// double amount = 123456.78;
-/// String formatted = amount.toCurrency(); // Returns "₹1,23,456.78"
-/// ```
 extension CurrencyDoubleFormatting on double {
-  /// Formats the double as Indian currency (₹1,23,456.78)
   String toCurrency({String locale = 'en_IN', String symbol = '₹', int decimalDigits = 2}) {
-    final format = NumberFormat.currency(locale: locale, symbol: symbol, decimalDigits: decimalDigits);
-    return format.format(this);
+    return NumberFormat.currency(locale: locale, symbol: symbol, decimalDigits: decimalDigits).format(this);
   }
 
-  /// Formats the double as compact Indian currency (₹1.2K, ₹1.5L, etc.)
   String toCompactCurrency({String locale = 'en-INR', String symbol = '₹', int decimalDigits = 2}) {
-    final format = NumberFormat.compactCurrency(locale: locale, symbol: symbol, decimalDigits: decimalDigits);
-    return format.format(this);
+    return NumberFormat.compactCurrency(locale: locale, symbol: symbol, decimalDigits: decimalDigits).format(this);
   }
 }
 
-/// Extension on num to provide currency formatting for both int and double
-///
-/// Example usage:
-/// ```dart
-/// num amount = 50000.5;
-/// String formatted = amount.toCurrency(); // Returns "₹50,000.50"
-/// ```
+/// Works on both `int` and `double` — uses 0 decimals for ints and 2 for
+/// doubles unless [decimalDigits] is set.
 extension CurrencyNumFormatting on num {
-  /// Formats the num as Indian currency (₹50,000.50)
   String toCurrency({String locale = 'en_IN', String symbol = '₹', int? decimalDigits}) {
     final digits = decimalDigits ?? (this is int ? 0 : 2);
-    final format = NumberFormat.currency(locale: locale, symbol: symbol, decimalDigits: digits);
-    return format.format(this);
+    return NumberFormat.currency(locale: locale, symbol: symbol, decimalDigits: digits).format(this);
   }
 
-  /// Formats the num as compact Indian currency (₹50K, ₹1.2L, etc.)
   String toCompactCurrency({String locale = 'en-INR', String symbol = '₹', int? decimalDigits}) {
     final digits = decimalDigits ?? (this is int ? 0 : 2);
-    final format = NumberFormat.compactCurrency(locale: locale, symbol: symbol, decimalDigits: digits);
-    return format.format(this);
+    return NumberFormat.compactCurrency(locale: locale, symbol: symbol, decimalDigits: digits).format(this);
   }
 }
 
-/// Extension on String to provide currency parsing and formatting
-///
-/// Example usage:
-/// ```dart
-/// String value = "12345.67";
-/// String formatted = value.toCurrency(); // Returns "₹12,345.67"
-/// ```
+/// Parse + format currency strings. Returns the zero-formatted value
+/// (`'₹0.00'` / `'₹0'`) on parse failure.
 extension CurrencyStringFormatting on String {
-  /// Parses the string as a double and formats as Indian currency
-  /// Returns "₹0.00" if parsing fails
   String toCurrency({String locale = 'en_IN', String symbol = '₹', int decimalDigits = 2}) {
+    final fmt = NumberFormat.currency(locale: locale, symbol: symbol, decimalDigits: decimalDigits);
     try {
-      final value = double.parse(this);
-      final format = NumberFormat.currency(locale: locale, symbol: symbol, decimalDigits: decimalDigits);
-      return format.format(value);
-    } catch (e) {
-      final format = NumberFormat.currency(locale: locale, symbol: symbol, decimalDigits: decimalDigits);
-      return format.format(0);
+      return fmt.format(double.parse(this));
+    } catch (_) {
+      return fmt.format(0);
     }
   }
 
-  /// Parses the string as a double and formats as compact Indian currency
-  /// Returns "₹0" if parsing fails
   String toCompactCurrency({String locale = 'en-INR', String symbol = '₹', int decimalDigits = 2}) {
+    final fmt = NumberFormat.compactCurrency(locale: locale, symbol: symbol, decimalDigits: decimalDigits);
     try {
-      final value = double.parse(this);
-      final format = NumberFormat.compactCurrency(locale: locale, symbol: symbol, decimalDigits: decimalDigits);
-      return format.format(value);
-    } catch (e) {
-      final format = NumberFormat.compactCurrency(locale: locale, symbol: symbol, decimalDigits: decimalDigits);
-      return format.format(0);
+      return fmt.format(double.parse(this));
+    } catch (_) {
+      return fmt.format(0);
     }
   }
 }

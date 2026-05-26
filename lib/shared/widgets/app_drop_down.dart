@@ -1,4 +1,4 @@
-import 'package:app_structure/core/theme/app_style.dart';
+import 'package:app_structure/core/theme/app_dimensions.dart';
 import 'package:app_structure/core/theme/app_text.dart';
 import 'package:app_structure/core/constants/app_colors.dart';
 import 'package:app_structure/shared/models/drop_down_model.dart';
@@ -8,43 +8,33 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import 'package:app_structure/core/utils/app_loader.dart';
 
-/// A customizable, performant dropdown widget for selecting from a list of items.
+/// Single-select dropdown that takes a list of [DropDownModel]. The
+/// dropdown arrow flips to a spinner while [isLoading] is `true` — use
+/// that while async-loading options instead of disabling the widget.
 ///
 /// Usage:
 /// ```dart
 /// AppDropDown(
-///   items: myItems,
-///   value: selectedItem,
-///   onChanged: (item) => setState(() => selectedItem = item),
-///   hintText: 'Select an option',
-/// )
+///   label: 'Country',
+///   hintText: 'Select a country',
+///   items: controller.countries,
+///   value: controller.selectedCountry.value,
+///   onChanged: controller.onCountryChanged,
+/// );
 /// ```
 class AppDropDown extends StatelessWidget {
-  /// List of items to display in the dropdown.
   final List<DropDownModel> items;
-
-  /// Currently selected value.
   final DropDownModel? value;
-
-  /// Callback when a new item is selected.
   final ValueChanged<DropDownModel?>? onChanged;
-
-  /// Placeholder text when nothing is selected.
   final String? hintText;
-
-  /// Optional label above the dropdown.
   final String? label;
-
-  /// Optional prefix icon asset (SVG/PNG).
   final String? prefixIcon;
 
-  /// Whether to show a loading indicator instead of the dropdown arrow.
+  /// Show a spinner in place of the dropdown arrow. Use while options
+  /// are loading rather than disabling the widget entirely.
   final bool isLoading;
 
-  /// Validator for form usage.
   final String? Function(DropDownModel?)? validator;
-
-  /// Custom color for the hint text.
   final Color? hintTextColor;
 
   const AppDropDown({super.key, required this.items, this.value, this.onChanged, this.hintText, this.label, this.prefixIcon, this.isLoading = false, this.validator, this.hintTextColor});

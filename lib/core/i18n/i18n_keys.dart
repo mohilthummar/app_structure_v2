@@ -58,6 +58,8 @@ class I18n {
   static const String dashboard = 'home.dashboard';
   static const String profile = 'home.profile';
   static const String logout = 'home.logout';
+  static const String showcase = 'home.showcase';
+  static const String openShowcase = 'home.openShowcase';
 
   // ── Settings ─────────────────────────────────────────────────────────────
   static const String theme = 'settings.theme';
