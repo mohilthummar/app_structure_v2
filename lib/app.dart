@@ -33,7 +33,9 @@ class MyApp extends StatelessWidget {
         scrollBehavior: AppScrollBehavior(),
         getPages: AppPages.pages,
         initialRoute: RouteNames.splash,
-        navigatorObservers: [analytics.observer],
+        navigatorObservers: [
+          if (analytics.isActive) analytics.observer,
+        ],
         translations: translations,
         locale: localeController.currentLocale.value,
         fallbackLocale: AppTranslations.fallbackLocale,

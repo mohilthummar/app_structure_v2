@@ -16,23 +16,23 @@ import 'package:app_structure/core/utils/app_logger.dart';
 class AnalyticsService {
   AnalyticsService();
 
-  late final FirebaseAnalyticsObserver _observer = FirebaseAnalyticsObserver(
-    analytics: _analytics,
-    routeFilter: (route) => route?.settings.name?.isNotEmpty == true,
-    nameExtractor: (settings) => settings.name,
-  );
+  FirebaseAnalyticsObserver? _observer;
 
   bool _ready = false;
 
   /// True when analytics is wired AND enabled.
   bool get isActive => _ready;
 
-  /// Pass this to `GetMaterialApp.navigatorObservers`. When analytics is
-  /// inactive the observer is still attached but every callback no-ops
-  /// via the `isActive` check inside `logScreen`.
-  NavigatorObserver get observer => _observer;
-
-  FirebaseAnalytics get _analytics => FirebaseAnalytics.instance;
+  /// Pass this to `GetMaterialApp.navigatorObservers` only when [isActive].
+  /// Never touches [FirebaseAnalytics] when Firebase init failed.
+  NavigatorObserver get observer {
+    if (!_isAvailable) return _NoopNavigatorObserver();
+    return _observer ??= FirebaseAnalyticsObserver(
+      analytics: FirebaseAnalytics.instance,
+      routeFilter: (route) => route?.settings.name?.isNotEmpty == true,
+      nameExtractor: (settings) => settings.name,
+    );
+  }
 
   Future<void> init() async {
     if (!_isAvailable) {
@@ -42,7 +42,7 @@ class AnalyticsService {
       );
       return;
     }
-    await _analytics.setAnalyticsCollectionEnabled(true);
+    await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(true);
     _ready = true;
   }
 
@@ -52,21 +52,25 @@ class AnalyticsService {
     Map<String, Object>? parameters,
   }) async {
     if (!_ready) return;
-    await _analytics.logEvent(name: name, parameters: parameters);
+    await FirebaseAnalytics.instance.logEvent(name: name, parameters: parameters);
   }
 
   /// Attach the current user id. Pass `null` on logout.
   Future<void> setUserId(String? userId) async {
     if (!_ready) return;
-    await _analytics.setUserId(id: userId);
+    await FirebaseAnalytics.instance.setUserId(id: userId);
   }
 
   /// Set a user property (e.g. role, locale, plan). Keep names stable —
   /// Analytics treats each unique name as its own dimension.
   Future<void> setUserProperty(String name, String? value) async {
     if (!_ready) return;
-    await _analytics.setUserProperty(name: name, value: value);
+    await FirebaseAnalytics.instance.setUserProperty(name: name, value: value);
   }
 
   bool get _isAvailable => Firebase.apps.isNotEmpty && AppEnvironment.enableAnalytics;
 }
+
+/// Used when Firebase is unavailable so [GetMaterialApp] can keep a stable
+/// observer list without calling [FirebaseAnalytics.instance].
+class _NoopNavigatorObserver extends NavigatorObserver {}

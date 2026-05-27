@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 
@@ -38,12 +39,14 @@ class DeviceInfoService {
   }
 
   Future<void> _refreshDeviceInfo() async {
-    await FirebaseMessaging.instance.requestPermission();
-    final fcmToken = await _fetchFcmToken();
+    final fcmToken = Firebase.apps.isNotEmpty ? await _fetchFcmToken() : null;
     await _persistDeviceDetails(fcmToken: fcmToken ?? '');
   }
 
   Future<String?> _fetchFcmToken() async {
+    if (Firebase.apps.isEmpty) return null;
+
+    await FirebaseMessaging.instance.requestPermission();
     // iOS simulator can't receive APNS tokens; debug placeholder.
     if (kDebugMode && Platform.isIOS) {
       final iosInfo = await DeviceInfoPlugin().iosInfo;

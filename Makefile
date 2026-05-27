@@ -107,15 +107,15 @@ logs: ## View Flutter logs (Ctrl+C to exit)
 
 format: ## Format all Dart code
 	@echo "$(BLUE)Formatting code...$(RESET)"
-	dart format .
+	dart format lib test
 
 format-check: ## Check formatting without changing files
 	@echo "$(BLUE)Checking code format...$(RESET)"
-	dart format --set-exit-if-changed .
+	dart format --set-exit-if-changed lib test
 
 analyze: ## Run static analysis (lint checks)
 	@echo "$(YELLOW)Analyzing code...$(RESET)"
-	flutter analyze
+	flutter analyze lib test
 
 lint: format analyze ## Format code + run analysis
 	@echo "$(GREEN)Lint complete.$(RESET)"

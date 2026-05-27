@@ -6,6 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 
 import 'package:app_structure/core/config/app_environment.dart';
+import 'package:app_structure/firebase_options.dart';
 import 'package:app_structure/core/constants/app_colors.dart';
 import 'package:app_structure/core/controllers/locale_controller.dart';
 import 'package:app_structure/core/controllers/theme_controller.dart';
@@ -99,7 +100,9 @@ Future<void> bootstrap({required EnvironmentType environment}) async {
 Future<void> _initFirebaseSafe() async {
   try {
     if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp();
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
     }
     if (kDebugMode) {
       AppLogger.success('Firebase initialised');

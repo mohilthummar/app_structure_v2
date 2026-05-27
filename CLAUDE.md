@@ -2,6 +2,8 @@
 
 Flutter app template, Dart `^3.8.1` / Flutter `^3.8.1`. GetX for state/DI/routing, Dio HTTP, flutter_dotenv. Package: `app_structure`. **Authoritative architecture doc:** [docs/PROJECT_ARCHITECTURE.md](docs/PROJECT_ARCHITECTURE.md) — read it before structural changes.
 
+**Platform floors:** Android `minSdk = 26` (Android 8), iOS deployment target `15.0`. Android toolchain: Gradle `8.14.3`, AGP `8.11.1`, Kotlin `2.2.20`, Java `17`. `flutter_local_notifications` requires core library desugaring (`desugar_jdk_libs` 2.1.4) — already wired in `android/app/build.gradle.kts`. Jetifier is OFF; all plugins must be AndroidX-native.
+
 ## Commands
 
 All via Makefile (`make help` for the full list).

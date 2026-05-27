@@ -11,6 +11,7 @@ analyzer:
     - "**/*.g.dart" # skip generated files (json_serializable, etc.)
     - "**/*.freezed.dart" # skip freezed generated files
     - "lib/shared/packages/**" # skip custom third-party packages
+    - "build/**" # iOS SPM artifacts (firebase_* examples) break analyze/format
 
 linter:
   rules:

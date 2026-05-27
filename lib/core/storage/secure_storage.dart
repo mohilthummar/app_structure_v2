@@ -2,14 +2,11 @@ import 'package:app_structure/core/constants/app_constants.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 /// Encrypted key/value storage for sensitive material (auth, refresh, CSRF
-/// tokens). Uses `EncryptedSharedPreferences` on Android, Keychain on iOS.
+/// tokens). Uses Keychain on iOS and encrypted storage on Android.
 ///
 /// Registered as a permanent service in `InitialBinding`.
 class SecureStorageService {
-  SecureStorageService()
-    : _storage = const FlutterSecureStorage(
-        aOptions: AndroidOptions(encryptedSharedPreferences: true),
-      );
+  SecureStorageService() : _storage = const FlutterSecureStorage();
 
   final FlutterSecureStorage _storage;
 
