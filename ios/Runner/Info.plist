@@ -28,6 +28,17 @@
 	<true/>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
+	<!-- Bonjour + local-network entries are required by the Flutter tool's
+	     debug protocol (`flutter run` over Wi-Fi, DevTools VM service). On
+	     release builds the app never advertises these services, so iOS
+	     does not surface the permission prompt to end users. -->
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_dartVmService._tcp</string>
+		<string>_dartobservatory._tcp</string>
+	</array>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Used only during development to let the Flutter debugger connect from your computer. Not used in App Store builds.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>This app needs camera access to take photos.</string>
 	<key>NSDocumentsFolderUsageDescription</key>
@@ -61,6 +72,10 @@
 			</array>
 		</dict>
 	</dict>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 	<key>UIFileSharingEnabled</key>

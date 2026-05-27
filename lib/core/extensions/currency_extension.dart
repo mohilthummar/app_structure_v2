@@ -18,7 +18,7 @@ extension CurrencyIntFormatting on int {
     return NumberFormat.currency(locale: locale, symbol: symbol, decimalDigits: 0).format(this);
   }
 
-  String toCompactCurrency({String locale = 'en-INR', String symbol = '₹'}) {
+  String toCompactCurrency({String locale = 'en_IN', String symbol = '₹'}) {
     return NumberFormat.compactCurrency(locale: locale, symbol: symbol, decimalDigits: 0).format(this);
   }
 }
@@ -28,7 +28,7 @@ extension CurrencyDoubleFormatting on double {
     return NumberFormat.currency(locale: locale, symbol: symbol, decimalDigits: decimalDigits).format(this);
   }
 
-  String toCompactCurrency({String locale = 'en-INR', String symbol = '₹', int decimalDigits = 2}) {
+  String toCompactCurrency({String locale = 'en_IN', String symbol = '₹', int decimalDigits = 2}) {
     return NumberFormat.compactCurrency(locale: locale, symbol: symbol, decimalDigits: decimalDigits).format(this);
   }
 }
@@ -41,7 +41,7 @@ extension CurrencyNumFormatting on num {
     return NumberFormat.currency(locale: locale, symbol: symbol, decimalDigits: digits).format(this);
   }
 
-  String toCompactCurrency({String locale = 'en-INR', String symbol = '₹', int? decimalDigits}) {
+  String toCompactCurrency({String locale = 'en_IN', String symbol = '₹', int? decimalDigits}) {
     final digits = decimalDigits ?? (this is int ? 0 : 2);
     return NumberFormat.compactCurrency(locale: locale, symbol: symbol, decimalDigits: digits).format(this);
   }
@@ -59,7 +59,7 @@ extension CurrencyStringFormatting on String {
     }
   }
 
-  String toCompactCurrency({String locale = 'en-INR', String symbol = '₹', int decimalDigits = 2}) {
+  String toCompactCurrency({String locale = 'en_IN', String symbol = '₹', int decimalDigits = 2}) {
     final fmt = NumberFormat.compactCurrency(locale: locale, symbol: symbol, decimalDigits: decimalDigits);
     try {
       return fmt.format(double.parse(this));

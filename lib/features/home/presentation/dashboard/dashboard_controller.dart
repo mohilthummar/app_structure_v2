@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:app_structure/core/base/base_controller.dart';
 import 'package:app_structure/core/constants/app_constants.dart';
 import 'package:app_structure/core/enums/view_state.dart';
+import 'package:app_structure/core/utils/app_logger.dart';
+import 'package:app_structure/core/utils/app_snack_bar.dart';
 import 'package:app_structure/features/home/data/dashboard_item_model.dart';
 import 'package:app_structure/features/home/domain/home_repository.dart';
 
@@ -48,19 +50,42 @@ class DashboardController extends BaseController {
   /// Pull next page. Idempotent — no-ops when already loading or end
   /// reached. Trigger from a scroll listener / `itemBuilder` near the
   /// bottom of the list.
+  ///
+  /// Deliberately bypasses [runGuarded]: that would flip `state` to
+  /// `loading`, and `StateSwitch.onLoading` swaps the list for a full-
+  /// screen spinner. During pagination we want the visible list to stay
+  /// rendered while a footer indicator (driven by [loadingMore]) shows
+  /// progress. Errors here surface via snackbar, not the error state.
   Future<void> loadMore() async {
     if (_loadingMore || !_hasMore) return;
     _loadingMore = true;
-    await _fetch(isInitial: false);
-    _loadingMore = false;
+    try {
+      final page = await _repo.getDashboard(
+        page: _page,
+        limit: AppConstants.defaultPageLimit,
+      );
+      items.addAll(page.items);
+      _hasMore = page.hasMore;
+      _page = page.page + 1;
+    } catch (e, st) {
+      AppLogger.error(
+        e.toString(),
+        tag: 'DashboardController.loadMore',
+        error: e,
+        stackTrace: st,
+      );
+      AppSnackBar.error(message: e.toString());
+    } finally {
+      _loadingMore = false;
+    }
   }
 
-  Future<void> _fetch({bool isInitial = true}) async {
+  Future<void> _fetch() async {
     final page = await runGuarded<DashboardPage>(
       () => _repo.getDashboard(page: _page, limit: AppConstants.defaultPageLimit),
       errorTag: 'DashboardController._fetch',
-      showErrorSnackbar: !isInitial, // initial failure shows the error state in StateSwitch
-      emptyWhen: (p) => isInitial && p.items.isEmpty,
+      showErrorSnackbar: false, // initial failure surfaces via StateSwitch.onError
+      emptyWhen: (p) => p.items.isEmpty,
     );
 
     if (page == null) return;

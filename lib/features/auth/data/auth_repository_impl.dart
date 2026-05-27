@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:app_structure/core/storage/local_storage.dart';
 import 'package:app_structure/core/storage/secure_storage.dart';
+import 'package:app_structure/core/utils/app_logger.dart';
 import 'package:app_structure/features/auth/data/auth_remote_datasource.dart';
 import 'package:app_structure/features/auth/data/login_request.dart';
 import 'package:app_structure/features/auth/data/login_response.dart';
@@ -58,7 +59,20 @@ class AuthRepositoryImpl implements AuthRepository {
     if (raw == null || raw.isEmpty) return null;
     try {
       return UserModel.fromJson(jsonDecode(raw) as Map<String, dynamic>);
-    } catch (_) {
+    } catch (e, st) {
+      // Likely a schema change between app versions — log so it's
+      // visible in Crashlytics rather than silently bouncing the user
+      // to the login screen.
+      AppLogger.warning(
+        'Stored user JSON failed to decode: $e',
+        tag: 'AuthRepositoryImpl.getStoredUser',
+      );
+      AppLogger.error(
+        'getStoredUser decode failure',
+        tag: 'AuthRepositoryImpl',
+        error: e,
+        stackTrace: st,
+      );
       return null;
     }
   }

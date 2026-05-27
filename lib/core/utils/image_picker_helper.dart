@@ -60,10 +60,14 @@ abstract class ImagePickerHelper {
   /// strings. Convenience for backends that accept inline images.
   static Future<List<String>> pickMultipleAsBase64() async {
     final files = await pickMultiple();
-    return files.map((e) {
-      final base64String = base64Encode(File(e.path).readAsBytesSync());
-      return 'data:image/png;base64,$base64String';
-    }).toList();
+    // Read each file async to avoid blocking the UI isolate. A multi-MB
+    // image read via readAsBytesSync stalls the main thread until done.
+    final encoded = <String>[];
+    for (final f in files) {
+      final bytes = await File(f.path).readAsBytes();
+      encoded.add('data:image/png;base64,${base64Encode(bytes)}');
+    }
+    return encoded;
   }
 
   /// Show [ImageSourceSheet] and return the picked file.

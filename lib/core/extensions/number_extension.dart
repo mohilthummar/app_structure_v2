@@ -21,7 +21,7 @@ extension NumberFormatting on int {
   String formatNumber() => NumberFormat('##,##,##,##0', 'en_IN').format(this);
 
   /// Compact form — `1000` → `1K`, `1000000` → `10L` (Indian compact).
-  String toCompactFormat() => NumberFormat.compact(locale: 'en-INR').format(this);
+  String toCompactFormat() => NumberFormat.compact(locale: 'en_IN').format(this);
 
   bool get isPositive => this > 0;
   bool get isNegative => this < 0;
@@ -37,7 +37,7 @@ extension NumberDoubleFormatting on double {
     return NumberFormat("##,##,##,##0.${'0' * decimals}", 'en_IN').format(this);
   }
 
-  String toCompactFormat() => NumberFormat.compact(locale: 'en-INR').format(this);
+  String toCompactFormat() => NumberFormat.compact(locale: 'en_IN').format(this);
 
   /// Round to [decimals] decimal places.
   double roundToDecimals(int decimals) {
@@ -84,7 +84,7 @@ extension NumberCompactFormatting on String {
   /// `'1500'` → `'1.5K'`. Returns `'0'` on parse failure.
   String compactNumber() {
     final n = double.tryParse(this) ?? 0;
-    return NumberFormat.compact(locale: 'en-INR').format(n);
+    return NumberFormat.compact(locale: 'en_IN').format(n);
   }
 
   String compactNumberWithLocale(String locale) {
@@ -95,7 +95,7 @@ extension NumberCompactFormatting on String {
   /// `'1500'` → `'₹1.5K'`. Compact Indian currency.
   String compactCurrency() {
     final n = double.tryParse(this) ?? 0;
-    return NumberFormat.compactCurrency(locale: 'en-INR').format(n);
+    return NumberFormat.compactCurrency(locale: 'en_IN').format(n);
   }
 }
 
@@ -108,7 +108,7 @@ extension NumFormatting on num {
     return NumberFormat('##,##,##,##0.00', 'en_IN').format(this);
   }
 
-  String toCompactFormat() => NumberFormat.compact(locale: 'en-INR').format(this);
+  String toCompactFormat() => NumberFormat.compact(locale: 'en_IN').format(this);
 
   bool isInRange(num min, num max) => this >= min && this <= max;
 

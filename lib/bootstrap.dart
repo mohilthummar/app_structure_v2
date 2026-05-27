@@ -118,13 +118,18 @@ Future<void> _initFirebaseSafe() async {
 }
 
 Future<void> _applySystemChrome() async {
+  // Boot-time defaults — the AppBar / Scaffold's
+  // `appBarTheme.systemOverlayStyle` (built into `AppTheme`) takes over once
+  // a screen with an AppBar mounts. Keep the icon brightness consistent with
+  // the background color (dark icons on white surfaces) or they become
+  // invisible until the theme overlay applies.
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: AppColors.white,
       statusBarIconBrightness: Brightness.dark,
       statusBarBrightness: Brightness.light,
       systemNavigationBarColor: AppColors.white,
-      systemNavigationBarIconBrightness: Brightness.light,
+      systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
 

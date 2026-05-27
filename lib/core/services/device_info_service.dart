@@ -4,9 +4,9 @@ import 'dart:math';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart';
 
 import 'package:app_structure/core/storage/local_storage.dart';
+import 'package:app_structure/core/utils/fcm_messaging_helper.dart';
 
 /// Collects device identity + FCM token and persists it for later lookups.
 ///
@@ -44,24 +44,14 @@ class DeviceInfoService {
   }
 
   Future<String?> _fetchFcmToken() async {
-    if (Firebase.apps.isEmpty) return null;
-
-    await FirebaseMessaging.instance.requestPermission();
-    // iOS simulator can't receive APNS tokens; debug placeholder.
-    if (kDebugMode && Platform.isIOS) {
-      final iosInfo = await DeviceInfoPlugin().iosInfo;
-      if (!iosInfo.isPhysicalDevice) {
-        return 'debug-token';
-      }
+    if (Platform.isIOS) {
+      await FirebaseMessaging.instance.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
     }
-
-    try {
-      await FirebaseMessaging.instance.deleteToken();
-      return await FirebaseMessaging.instance.getToken();
-    } catch (e) {
-      debugPrint('FCM token fetch failed: $e');
-      return null;
-    }
+    return FcmMessagingHelper.fetchToken();
   }
 
   Future<void> _persistDeviceDetails({required String fcmToken}) async {

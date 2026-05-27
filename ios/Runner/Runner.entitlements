@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Required for Firebase Cloud Messaging on iOS. `development` enables
+	     APNs sandbox (debug / TestFlight internal). When you ship to the
+	     App Store, Xcode automatically rewrites this to `production` if
+	     the build is signed with a Distribution profile that has the
+	     Push Notifications capability enabled. Do NOT hardcode
+	     `production` here — debug builds on a real device will silently
+	     fail to register for APNs.
+
+	     Setup checklist (external — cannot be done in code):
+	       1. Apple Developer portal → Certificates, Identifiers & Profiles
+	          → Identifiers → your App ID → enable "Push Notifications".
+	       2. Keys → "+" → enable "Apple Push Notifications service (APNs)"
+	          → download the .p8 file (one-time only).
+	       3. Firebase Console → Project Settings → Cloud Messaging →
+	          "APNs Authentication Key" → upload the .p8 with its Key ID
+	          and Team ID.
+	       4. Xcode → Runner target → Signing & Capabilities → "+ Capability"
+	          → Push Notifications + Background Modes (Remote notifications). -->
+	<key>aps-environment</key>
+	<string>development</string>
+</dict>
+</plist>

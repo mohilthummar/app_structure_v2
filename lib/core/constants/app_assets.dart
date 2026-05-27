@@ -17,7 +17,7 @@ class AppAssets {
   static const String icWarning = '${iconPath}ic_warning.svg';
 
   /// Splash view
-  static const String splashIcon = '${imagePath}splash_icon.svg';
+  static const String splashIcon = '${imagePath}ic_app_logo.svg';
 
   /// Login View
 }

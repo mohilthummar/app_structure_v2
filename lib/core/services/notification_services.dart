@@ -13,7 +13,7 @@ import 'package:app_structure/core/utils/app_logger.dart';
 
 /// Payload extracted from a tapped or foreground push. Routes consumers
 /// can act on without re-parsing the raw `Map`. Always built via
-/// [NotificationService._parse], which whitelists the `type` field.
+/// [_emit], which whitelists the `type` field.
 class NotificationPayload {
   const NotificationPayload({
     required this.type,
@@ -60,7 +60,6 @@ class NotificationService {
        _allowedTypes = allowedTypes ?? const {};
 
   final LocalStorageService _storage;
-  // ignore: unused_field
   final DeviceInfoService _deviceInfo;
   final PermissionService _permissions;
 
@@ -86,6 +85,13 @@ class NotificationService {
     importance: Importance.high,
   );
 
+  /// Status-bar / heads-up icon used for Android local notifications.
+  /// Android 5+ requires a white-on-transparent silhouette; using a colored
+  /// launcher icon makes the system display a white square. The placeholder
+  /// silhouette shipped under `android/app/src/main/res/drawable-*/ic_notification.png`
+  /// is meant to be replaced with your brand asset.
+  static const String _androidNotificationIcon = '@drawable/ic_notification';
+
   /// Idempotent. No-op when Firebase init failed.
   Future<void> init() async {
     if (_initialized) return;
@@ -98,10 +104,10 @@ class NotificationService {
       return;
     }
 
-    await _requestPermission();
-    await _initLocalNotifications();
-    await _wireFcm();
-    await _refreshDeviceToken();
+    await _runStep('requestPermission', _requestPermission);
+    await _runStep('initLocalNotifications', _initLocalNotifications);
+    await _runStep('wireFcm', _wireFcm);
+    await _runStep('refreshDeviceToken', _refreshDeviceToken);
 
     _initialized = true;
   }
@@ -111,17 +117,39 @@ class NotificationService {
 
   // ── Internals ────────────────────────────────────────────────────────────
 
+  Future<void> _runStep(String step, Future<void> Function() action) async {
+    try {
+      await action();
+    } catch (e, st) {
+      AppLogger.error(
+        '$step failed: $e',
+        tag: 'NotificationService',
+        error: e,
+        stackTrace: st,
+      );
+    }
+  }
+
   Future<void> _requestPermission() async {
     final outcome = await _permissions.notification();
     AppLogger.data(outcome.name, tag: 'NotificationService.permission');
+
+    if (Platform.isIOS) {
+      await FirebaseMessaging.instance.requestPermission(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+    }
   }
 
   Future<void> _initLocalNotifications() async {
-    const android = AndroidInitializationSettings('@drawable/ic_notification');
+    const android = AndroidInitializationSettings(_androidNotificationIcon);
+    // Permissions are requested via [PermissionService] + FCM above.
     const iOS = DarwinInitializationSettings(
-      requestSoundPermission: true,
-      requestBadgePermission: true,
-      requestAlertPermission: true,
+      requestSoundPermission: false,
+      requestBadgePermission: false,
+      requestAlertPermission: false,
     );
 
     await _local.initialize(
@@ -155,30 +183,33 @@ class NotificationService {
     // setForegroundNotificationPresentationOptions above.
     FirebaseMessaging.onMessage.listen((msg) async {
       if (Platform.isAndroid && msg.notification != null) {
-        await _showLocal(msg);
+        try {
+          await _showLocal(msg);
+        } catch (e, st) {
+          AppLogger.error(
+            'Foreground local notification failed: $e',
+            tag: 'NotificationService',
+            error: e,
+            stackTrace: st,
+          );
+        }
       }
     });
   }
 
+  /// Persists FCM token plus device id/type via [DeviceInfoService].
+  ///
+  /// The token itself is intentionally not logged — per
+  /// `.claude/rules/security.md`, FCM tokens are secrets (anyone with
+  /// the token can push to that device). We log only its presence and
+  /// length so a missing-token incident is still diagnosable.
   Future<void> _refreshDeviceToken() async {
-    try {
-      final token = await FirebaseMessaging.instance.getToken();
-      if (token != null && token.isNotEmpty) {
-        await _storage.saveDeviceInfo(
-          deviceId: _storage.deviceId,
-          deviceType: _storage.deviceType,
-          deviceToken: token,
-          deviceName: _storage.deviceName,
-        );
-      }
-    } catch (e, st) {
-      AppLogger.error(
-        e.toString(),
-        tag: 'NotificationService.refreshDeviceToken',
-        error: e,
-        stackTrace: st,
-      );
-    }
+    await _deviceInfo.getDeviceInfo(refresh: true);
+    final token = _storage.deviceToken;
+    AppLogger.info(
+      token.isEmpty ? 'FCM token not available' : 'FCM token registered (len=${token.length})',
+      tag: 'NotificationService',
+    );
   }
 
   Future<void> _showLocal(RemoteMessage msg) async {
@@ -188,7 +219,7 @@ class NotificationService {
       channelDescription: _channel.description,
       priority: Priority.high,
       importance: Importance.max,
-      icon: '@drawable/ic_notification',
+      icon: _androidNotificationIcon,
     );
     const iOS = DarwinNotificationDetails(
       presentSound: true,
@@ -208,9 +239,9 @@ class NotificationService {
   void _onLocalTap(String? raw) {
     if (raw == null || raw.isEmpty) return;
     try {
-      final data = jsonDecode(raw);
-      if (data is Map<String, dynamic>) {
-        _emit(data, null);
+      final decoded = jsonDecode(raw);
+      if (decoded is Map) {
+        _emit(Map<String, dynamic>.from(decoded), null);
       }
     } catch (e) {
       AppLogger.warning(

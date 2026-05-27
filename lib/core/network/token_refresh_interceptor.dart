@@ -4,6 +4,7 @@ import 'package:app_structure/core/config/api_urls.dart';
 import 'package:app_structure/core/config/app_environment.dart';
 import 'package:app_structure/core/constants/app_constants.dart';
 import 'package:app_structure/core/storage/secure_storage.dart';
+import 'package:app_structure/core/utils/app_logger.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
@@ -24,8 +25,11 @@ class TokenRefreshInterceptor extends QueuedInterceptor {
   final Dio _dio;
   final SecureStorageService _secureStorage;
 
-  static bool _isRefreshing = false;
-  static final List<_PendingRequest> _failedQueue = <_PendingRequest>[];
+  // Instance fields, not static: when ApiClient is recreated via Get.fenix
+  // (e.g. after logout), a fresh interceptor must start with clean state.
+  // Static fields would leak the previous Dio's queue into the new instance.
+  bool _isRefreshing = false;
+  final List<_PendingRequest> _failedQueue = <_PendingRequest>[];
 
   @override
   Future<void> onError(
@@ -85,10 +89,7 @@ class TokenRefreshInterceptor extends QueuedInterceptor {
   }
 
   void _log(String msg) {
-    if (kDebugMode) {
-      // ignore: avoid_print
-      print('[TokenRefresh] $msg');
-    }
+    AppLogger.debug(msg, tag: 'TokenRefresh');
   }
 
   Future<String?> _refreshAccessToken() async {

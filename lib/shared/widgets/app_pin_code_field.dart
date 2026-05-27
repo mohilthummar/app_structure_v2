@@ -19,6 +19,11 @@ class AppPinCodeField extends StatelessWidget {
   final void Function(String)? onCompleted;
   final FormFieldValidator<String>? validator;
 
+  /// Number of OTP digits. Defaults to 6 to align with [Validators.otp]
+  /// (which matches `^\d{6}$`). Override when your backend issues codes
+  /// of a different length AND adjust the validator accordingly.
+  final int length;
+
   const AppPinCodeField({
     super.key,
     this.controller,
@@ -30,6 +35,7 @@ class AppPinCodeField extends StatelessWidget {
     this.validator,
     this.onChanged,
     this.onCompleted,
+    this.length = 6,
   });
 
   @override
@@ -40,7 +46,7 @@ class AppPinCodeField extends StatelessWidget {
       children: [
         if (label != null) ...[AppText(label!, textColor: AppColors.darkGreyTextColor), 4.verticalSpace],
         PinCodeTextField(
-          length: 4,
+          length: length,
           appContext: context,
           controller: controller,
 

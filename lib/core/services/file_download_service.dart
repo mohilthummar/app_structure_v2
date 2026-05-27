@@ -165,7 +165,12 @@ class FileDownloadService {
       if (await outFile.exists()) {
         try {
           await outFile.delete();
-        } catch (_) {}
+        } catch (e) {
+          AppLogger.warning(
+            'Failed to clean up partial download: $e',
+            tag: 'FileDownloadService',
+          );
+        }
       }
       if (CancelToken.isCancel(e)) {
         AppLogger.warning('Download cancelled: $url', tag: 'FileDownloadService');
@@ -182,7 +187,12 @@ class FileDownloadService {
       if (await outFile.exists()) {
         try {
           await outFile.delete();
-        } catch (_) {}
+        } catch (e) {
+          AppLogger.warning(
+            'Failed to clean up partial download: $e',
+            tag: 'FileDownloadService',
+          );
+        }
       }
       AppLogger.error(
         e.toString(),
