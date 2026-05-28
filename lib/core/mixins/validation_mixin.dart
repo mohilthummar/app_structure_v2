@@ -1,13 +1,92 @@
-import 'package:app_structure/core/utils/validators.dart';
-
-/// Form-field validation mixin. Methods delegate to `Validators` so the
-/// rules stay in one place. New code can call `Validators.x` directly;
-/// this mixin remains for backward compatibility with existing controllers.
+/// The single home for form-field validation in the app. Mix into any
+/// controller that drives a `Form`, then pass the `*Validator` tear-offs
+/// straight to a field's `validator:` argument.
+///
+/// All methods return `null` when the input is valid, or a short,
+/// user-safe error string otherwise. There is no separate static
+/// `Validators` class — keep every rule here so the whole app validates
+/// the same way (see [.claude/rules/code-quality.md] "No duplicate
+/// implementations").
+///
+/// Usage:
+/// ```dart
+/// class LoginController extends BaseController with ValidationMixin {
+///   final emailController = TextEditingController();
+/// }
+///
+/// // in the view (GetView<LoginController>):
+/// AppTextField(
+///   controller: controller.emailController,
+///   validator: controller.emailValidator,
+/// );
+///
+/// // compose several rules — first error wins:
+/// validator: controller.compose([
+///   controller.requiredValidator,
+///   controller.emailValidator,
+/// ]);
+/// ```
 mixin ValidationMixin {
-  /// Validate the email
-  String? emailValidator(String? email) => Validators.email(email);
+  // ── Generic ────────────────────────────────────────────────────────────
+  /// Non-empty check. [fieldName] personalises the message.
+  String? requiredValidator(String? value, [String fieldName = 'This field']) {
+    if (value == null || value.trim().isEmpty) {
+      return '$fieldName is required';
+    }
+    return null;
+  }
 
-  /// Validate the password (8+ chars, includes letter, capital, number, symbol)
+  String? minLengthValidator(String? value, int min, [String fieldName = 'This field']) {
+    if (value == null || value.length < min) {
+      return '$fieldName must be at least $min characters';
+    }
+    return null;
+  }
+
+  String? maxLengthValidator(String? value, int max, [String fieldName = 'This field']) {
+    if (value != null && value.length > max) {
+      return '$fieldName must be at most $max characters';
+    }
+    return null;
+  }
+
+  /// Accepts empty (use [requiredValidator] to forbid that); rejects
+  /// non-numeric input otherwise.
+  String? numericValidator(String? value, [String fieldName = 'This field']) {
+    if (value == null || value.isEmpty) return null;
+    if (double.tryParse(value) == null) {
+      return '$fieldName must be a number';
+    }
+    return null;
+  }
+
+  // ── Email / URL ──────────────────────────────────────────────────────────
+  String? emailValidator(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Email is required';
+    }
+    final regex = RegExp(r'^[\w-\.+]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!regex.hasMatch(value.trim())) {
+      return 'Please enter a valid email';
+    }
+    return null;
+  }
+
+  /// Accepts empty; validates the shape only when a value is present.
+  String? urlValidator(String? value) {
+    if (value == null || value.isEmpty) return null;
+    final regex = RegExp(
+      r'^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$',
+    );
+    if (!regex.hasMatch(value)) {
+      return 'Please enter a valid URL';
+    }
+    return null;
+  }
+
+  // ── Password ───────────────────────────────────────────────────────────
+  /// Strong-password policy: 8+ chars, at least one lowercase letter, one
+  /// capital, one number, and one symbol. No leading whitespace.
   String? passwordValidator(String? password) {
     if (password == null || password.isEmpty) {
       return 'Please enter your password';
@@ -33,29 +112,26 @@ mixin ValidationMixin {
     return null;
   }
 
-  /// Validate a new password — same rules as `passwordValidator`.
+  /// Same policy as [passwordValidator] — alias for set-new-password flows.
   String? newPasswordValidator(String? password) => passwordValidator(password);
 
-  /// Validate the confirm-password for forgot-password flow.
-  String? confirmPasswordValidatorForForgotPassword(String? value, String newPassword) {
+  String? confirmPasswordValidator(String? value, String password) {
     if (value == null || value.isEmpty) {
       return 'Please re-enter your password';
     }
-    if (value != newPassword) {
+    if (value != password) {
       return 'Passwords do not match';
     }
     return null;
   }
 
-  /// Validate the confirm-password for general use.
-  String? confirmPasswordValidator(String? value, String password) => confirmPasswordValidatorForForgotPassword(value, password);
-
-  /// Validate phone number with explicit length check.
-  String? phoneValidator(String? value, int phoneLength) {
+  // ── Phone ────────────────────────────────────────────────────────────────
+  /// [minLength] is the minimum digit count to accept (defaults to 7).
+  String? phoneValidator(String? value, [int minLength = 7]) {
     if (value == null || value.isEmpty) {
       return 'Please enter your mobile number';
     }
-    if (value.length < phoneLength) {
+    if (value.length < minLength) {
       return 'Please enter a valid mobile number';
     }
     final regExp = RegExp(r'^[+]*[(]?[0-9]{1,4}[)]?[-\s./0-9]*$');
@@ -65,7 +141,19 @@ mixin ValidationMixin {
     return null;
   }
 
-  /// Validate a person's name.
+  // ── OTP ────────────────────────────────────────────────────────────────
+  /// 6-digit numeric one-time password.
+  String? otpValidator(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Verification code is required';
+    }
+    if (!RegExp(r'^\d{6}$').hasMatch(value.trim())) {
+      return 'Enter the 6-digit code';
+    }
+    return null;
+  }
+
+  // ── Name / address ─────────────────────────────────────────────────────
   String? nameValidator(String? value) {
     if (value == null || value.isEmpty) {
       return 'Please enter your name';
@@ -79,7 +167,6 @@ mixin ValidationMixin {
     return null;
   }
 
-  /// Validate a street address.
   String? addressValidator(String? value) {
     if (value == null || value.isEmpty) {
       return 'Please enter your address';
@@ -91,5 +178,17 @@ mixin ValidationMixin {
       return 'No leading white spaces allowed';
     }
     return null;
+  }
+
+  // ── Combinator ───────────────────────────────────────────────────────────
+  /// Chains validators left-to-right and returns the first error found.
+  String? Function(String?) compose(List<String? Function(String?)> validators) {
+    return (String? value) {
+      for (final validator in validators) {
+        final error = validator(value);
+        if (error != null) return error;
+      }
+      return null;
+    };
   }
 }

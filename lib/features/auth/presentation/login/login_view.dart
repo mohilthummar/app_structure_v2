@@ -8,7 +8,6 @@ import 'package:app_structure/core/i18n/i18n_keys.dart';
 import 'package:app_structure/core/routing/route_names.dart';
 import 'package:app_structure/core/theme/app_dimensions.dart';
 import 'package:app_structure/core/theme/app_text.dart';
-import 'package:app_structure/core/utils/validators.dart';
 import 'package:app_structure/features/auth/presentation/login/login_controller.dart';
 import 'package:app_structure/shared/widgets/app_button.dart';
 import 'package:app_structure/shared/widgets/app_text_field.dart';
@@ -40,7 +39,7 @@ class LoginView extends GetView<LoginController> {
                   controller: controller.emailController,
                   hintText: I18n.email.tr,
                   keyboardType: TextInputType.emailAddress,
-                  validator: Validators.email,
+                  validator: controller.emailValidator,
                 ),
                 SizedBox(height: AppDimensions.spacing16.h),
 
@@ -49,7 +48,7 @@ class LoginView extends GetView<LoginController> {
                     controller: controller.passwordController,
                     hintText: I18n.password.tr,
                     obscureText: controller.isPasswordHidden.value,
-                    validator: Validators.password,
+                    validator: controller.passwordValidator,
                     suffixIcon: IconButton(
                       icon: Icon(
                         controller.isPasswordHidden.value ? Icons.visibility_off : Icons.visibility,

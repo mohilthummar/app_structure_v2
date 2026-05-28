@@ -3,11 +3,12 @@ import 'package:get/get.dart';
 
 import 'package:app_structure/core/base/base_controller.dart';
 import 'package:app_structure/core/controllers/auth_controller.dart';
+import 'package:app_structure/core/mixins/validation_mixin.dart';
 import 'package:app_structure/core/routing/route_names.dart';
 import 'package:app_structure/features/auth/data/login_request.dart';
 import 'package:app_structure/features/auth/domain/auth_repository.dart';
 
-class LoginController extends BaseController {
+class LoginController extends BaseController with ValidationMixin {
   LoginController(this._repo);
 
   final AuthRepository _repo;

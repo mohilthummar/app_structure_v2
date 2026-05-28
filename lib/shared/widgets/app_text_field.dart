@@ -21,7 +21,7 @@ import 'package:app_structure/shared/widgets/bottom_border_container.dart';
 ///   label: 'Email',
 ///   hintText: 'name@example.com',
 ///   keyboardType: TextInputType.emailAddress,
-///   validator: Validators.email,
+///   validator: controller.emailValidator,
 /// );
 /// ```
 class AppTextField extends StatefulWidget {

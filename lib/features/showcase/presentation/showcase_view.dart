@@ -10,16 +10,16 @@ import 'package:app_structure/core/extensions/currency_extension.dart';
 import 'package:app_structure/core/extensions/date_extension.dart';
 import 'package:app_structure/core/extensions/number_extension.dart';
 import 'package:app_structure/core/i18n/i18n_keys.dart';
+import 'package:app_structure/core/mixins/validation_mixin.dart';
+import 'package:app_structure/core/services/file_picker_service.dart';
+import 'package:app_structure/core/services/image_picker_service.dart';
 import 'package:app_structure/core/theme/app_dimensions.dart';
 import 'package:app_structure/core/theme/app_text.dart';
 import 'package:app_structure/core/theme/app_typography.dart';
 import 'package:app_structure/core/utils/app_loader.dart';
 import 'package:app_structure/core/utils/app_shimmers.dart';
 import 'package:app_structure/core/utils/app_snack_bar.dart';
-import 'package:app_structure/core/utils/file_picker_helper.dart';
-import 'package:app_structure/core/utils/image_picker_helper.dart';
 import 'package:app_structure/core/utils/string_utils.dart';
-import 'package:app_structure/core/utils/validators.dart';
 import 'package:app_structure/shared/models/drop_down_model.dart';
 import 'package:app_structure/shared/widgets/app_app_bar.dart';
 import 'package:app_structure/shared/widgets/app_button.dart';
@@ -45,6 +45,14 @@ import 'package:app_structure/shared/widgets/state_switch.dart';
 /// Each section in the scroll view demos one family of components,
 /// followed by a code-style note describing what to use it for and where
 /// to find it.
+
+/// Holds a [ValidationMixin] instance so the showcase can demo validators
+/// outside a controller. Real screens mix [ValidationMixin] into their
+/// controller and call `controller.emailValidator` instead.
+class _ShowcaseValidators with ValidationMixin {}
+
+final _validators = _ShowcaseValidators();
+
 class ShowcaseView extends StatefulWidget {
   /// Creates the showcase view.
   const ShowcaseView({super.key});
@@ -154,7 +162,7 @@ class _ShowcaseViewState extends State<ShowcaseView> {
                 ),
                 _Section(
                   title: 'Pickers (image · file)',
-                  hint: 'lib/core/utils/image_picker_helper.dart · file_picker_helper.dart',
+                  hint: 'lib/core/services/image_picker_service.dart · file_picker_service.dart',
                   child: _PickerSection(
                     pickedImage: _pickedImage,
                     pickedFile: _pickedFileName,
@@ -168,8 +176,8 @@ class _ShowcaseViewState extends State<ShowcaseView> {
                   child: _FormattingSection(),
                 ),
                 const _Section(
-                  title: 'Validators (Validators)',
-                  hint: 'lib/core/utils/validators.dart',
+                  title: 'Validators (ValidationMixin)',
+                  hint: 'lib/core/mixins/validation_mixin.dart',
                   child: _ValidatorSection(),
                 ),
                 const _Section(
@@ -467,7 +475,7 @@ class _InputSection extends StatelessWidget {
           label: 'Email',
           hintText: 'name@example.com',
           keyboardType: TextInputType.emailAddress,
-          validator: Validators.email,
+          validator: _validators.emailValidator,
         ),
         SizedBox(height: AppDimensions.spacing12.h),
         AppPinCodeField(
@@ -651,7 +659,7 @@ class _PickerSection extends StatelessWidget {
             Expanded(
               child: AppButton.outlined(
                 onPressed: () async {
-                  final file = await ImagePickerHelper.pickFromSheet();
+                  final file = await ImagePickerService.pickFromSheet();
                   onImage(file);
                 },
                 label: 'Pick image',
@@ -661,9 +669,9 @@ class _PickerSection extends StatelessWidget {
             Expanded(
               child: AppButton.outlined(
                 onPressed: () async {
-                  final file = await FilePickerHelper.pick();
+                  final file = await FilePickerService.pick();
                   if (file != null) {
-                    onFile('${file.name} · ${FilePickerHelper.formatFileSize(file.size)}');
+                    onFile('${file.name} · ${FilePickerService.formatFileSize(file.size)}');
                   }
                 },
                 label: 'Pick PDF',
@@ -742,12 +750,12 @@ class _ValidatorSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cases = <(String, String?)>[
-      ('Validators.email("foo")', Validators.email('foo')),
-      ('Validators.email("a@b.co")', Validators.email('a@b.co')),
-      ('Validators.password("short")', Validators.password('short')),
-      ('Validators.password("StrongPass1")', Validators.password('StrongPass1')),
-      ('Validators.otp("123")', Validators.otp('123')),
-      ('Validators.otp("123456")', Validators.otp('123456')),
+      ('emailValidator("foo")', _validators.emailValidator('foo')),
+      ('emailValidator("a@b.co")', _validators.emailValidator('a@b.co')),
+      ('passwordValidator("short")', _validators.passwordValidator('short')),
+      ('passwordValidator("StrongPass1!")', _validators.passwordValidator('StrongPass1!')),
+      ('otpValidator("123")', _validators.otpValidator('123')),
+      ('otpValidator("123456")', _validators.otpValidator('123456')),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

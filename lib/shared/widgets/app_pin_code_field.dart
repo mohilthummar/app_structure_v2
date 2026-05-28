@@ -19,9 +19,10 @@ class AppPinCodeField extends StatelessWidget {
   final void Function(String)? onCompleted;
   final FormFieldValidator<String>? validator;
 
-  /// Number of OTP digits. Defaults to 6 to align with [Validators.otp]
-  /// (which matches `^\d{6}$`). Override when your backend issues codes
-  /// of a different length AND adjust the validator accordingly.
+  /// Number of OTP digits. Defaults to 6 to align with
+  /// [ValidationMixin.otpValidator] (which matches `^\d{6}$`). Override when
+  /// your backend issues codes of a different length AND adjust the
+  /// validator accordingly.
   final int length;
 
   const AppPinCodeField({

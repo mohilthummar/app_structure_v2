@@ -5,8 +5,8 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
+import 'package:app_structure/core/services/fcm_token_service.dart';
 import 'package:app_structure/core/storage/local_storage.dart';
-import 'package:app_structure/core/utils/fcm_messaging_helper.dart';
 
 /// Collects device identity + FCM token and persists it for later lookups.
 ///
@@ -51,7 +51,7 @@ class DeviceInfoService {
         sound: true,
       );
     }
-    return FcmMessagingHelper.fetchToken();
+    return FcmTokenService.fetchToken();
   }
 
   Future<void> _persistDeviceDetails({required String fcmToken}) async {

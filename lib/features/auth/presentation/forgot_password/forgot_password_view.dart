@@ -7,7 +7,6 @@ import 'package:app_structure/core/enums/view_state.dart';
 import 'package:app_structure/core/i18n/i18n_keys.dart';
 import 'package:app_structure/core/theme/app_dimensions.dart';
 import 'package:app_structure/core/theme/app_text.dart';
-import 'package:app_structure/core/utils/validators.dart';
 import 'package:app_structure/features/auth/presentation/forgot_password/forgot_password_controller.dart';
 import 'package:app_structure/shared/widgets/app_button.dart';
 import 'package:app_structure/shared/widgets/app_text_field.dart';
@@ -41,7 +40,7 @@ class ForgotPasswordView extends GetView<ForgotPasswordController> {
                   controller: controller.emailController,
                   hintText: I18n.email.tr,
                   keyboardType: TextInputType.emailAddress,
-                  validator: Validators.email,
+                  validator: controller.emailValidator,
                 ),
                 SizedBox(height: AppDimensions.spacing24.h),
 

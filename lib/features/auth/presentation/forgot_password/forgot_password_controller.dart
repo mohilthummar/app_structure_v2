@@ -4,10 +4,11 @@ import 'package:get/get.dart';
 import 'package:app_structure/core/base/base_controller.dart';
 import 'package:app_structure/core/enums/view_state.dart';
 import 'package:app_structure/core/i18n/i18n_keys.dart';
+import 'package:app_structure/core/mixins/validation_mixin.dart';
 import 'package:app_structure/core/utils/app_snack_bar.dart';
 import 'package:app_structure/features/auth/domain/auth_repository.dart';
 
-class ForgotPasswordController extends BaseController {
+class ForgotPasswordController extends BaseController with ValidationMixin {
   ForgotPasswordController(this._repo);
 
   final AuthRepository _repo;

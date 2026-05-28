@@ -13,15 +13,19 @@ import 'package:path_provider/path_provider.dart';
 ///
 /// Usage:
 /// ```dart
-/// final file = await FilePickerHelper.pick();
+/// final file = await FilePickerService.pick();
 /// if (file == null) return; // user cancelled
-/// if (!FilePickerHelper.isValidSize(file.size)) {
+/// if (!FilePickerService.isValidSize(file.size)) {
 ///   AppSnackBar.error(message: 'File too large');
 ///   return;
 /// }
-/// final downloadDir = await FilePickerHelper.getDownloadPath();
+/// final downloadDir = await FilePickerService.getDownloadPath();
 /// ```
-abstract class FilePickerHelper {
+///
+/// Stateless static helper — not a GetX-injected service; it lives under
+/// `services/` because it wraps a platform capability (the file picker +
+/// download dirs), not because it holds session state.
+abstract class FilePickerService {
   // ── Allow-lists ──────────────────────────────────────────────────────────
   /// Image extensions accepted across the app.
   static const List<String> imageExtensions = [

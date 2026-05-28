@@ -51,4 +51,5 @@ Per-feature `domain/` (abstract Repository interface) ← `data/` (datasource ca
 - Don't `Get.put` in screen bindings (use `Get.lazyPut`). Don't `Navigator.of(context)` (use `Get.toNamed`/`back`/`offAllNamed`).
 - Don't inline user-visible strings — use `I18n.<key>.tr`. Don't inline colors / sizes — use `AppColors` / `AppDimensions`.
 - Don't navigate from `NotificationService` or `DeepLinkService` — subscribe to their streams and navigate from a top-level coordinator.
+- Don't create a second implementation of something that already exists. One job, one home: validators live only in `ValidationMixin`, tokens in `core/theme/`, platform wrappers in `core/services/`. Extend the canonical version — never fork a near-copy. See [.claude/rules/code-quality.md](.claude/rules/code-quality.md) "No duplicate implementations".
 - Don't commit `.env`. Keep `.env.example` in sync.

@@ -20,15 +20,19 @@ import 'package:app_structure/core/theme/app_text.dart';
 /// Usage:
 /// ```dart
 /// // Pick from a known source
-/// final file = await ImagePickerHelper.pick(ImageSource.gallery);
+/// final file = await ImagePickerService.pick(ImageSource.gallery);
 ///
 /// // Show a bottom sheet that lets the user choose
-/// final file = await ImagePickerHelper.pickFromSheet();
+/// final file = await ImagePickerService.pickFromSheet();
 ///
 /// // Multi-pick
-/// final files = await ImagePickerHelper.pickMultiple();
+/// final files = await ImagePickerService.pickMultiple();
 /// ```
-abstract class ImagePickerHelper {
+///
+/// Stateless static helper — not a GetX-injected service; it lives under
+/// `services/` because it wraps a platform capability (the image picker),
+/// not because it holds session state.
+abstract class ImagePickerService {
   static final ImagePicker _picker = ImagePicker();
 
   /// Pick a single image from [source] (gallery or camera).
@@ -121,7 +125,7 @@ class ImageSourceSheet extends StatelessWidget {
                 icon: Icons.image_rounded,
                 title: 'Gallery',
                 onTap: () async {
-                  final file = await ImagePickerHelper.pick(ImageSource.gallery);
+                  final file = await ImagePickerService.pick(ImageSource.gallery);
                   Get.back<XFile?>(result: file);
                 },
               ),
@@ -129,7 +133,7 @@ class ImageSourceSheet extends StatelessWidget {
                 icon: Icons.camera_alt_rounded,
                 title: 'Camera',
                 onTap: () async {
-                  final file = await ImagePickerHelper.pick(ImageSource.camera);
+                  final file = await ImagePickerService.pick(ImageSource.camera);
                   Get.back<XFile?>(result: file);
                 },
               ),

@@ -9,7 +9,12 @@ import 'package:app_structure/core/utils/app_logger.dart';
 
 /// Shared FCM token fetch used by [DeviceInfoService] and
 /// [NotificationService]. Handles iOS APNS timing and simulator fallback.
-abstract final class FcmMessagingHelper {
+///
+/// Stateless static helper — not a GetX-injected service, so it's never
+/// registered in `InitialBinding`. It lives under `services/` because it
+/// wraps a platform capability (Firebase Messaging), not because it holds
+/// session state.
+abstract final class FcmTokenService {
   /// Returns an FCM registration token, or `null` when Firebase is off or
   /// the token cannot be obtained (permissions denied, APNS missing, etc.).
   static Future<String?> fetchToken() async {
@@ -26,7 +31,7 @@ abstract final class FcmMessagingHelper {
     } catch (e, st) {
       AppLogger.error(
         'FCM getToken failed: $e',
-        tag: 'FcmMessagingHelper',
+        tag: 'FcmTokenService',
         error: e,
         stackTrace: st,
       );
@@ -48,7 +53,7 @@ abstract final class FcmMessagingHelper {
     AppLogger.warning(
       'APNS token not available after ${attempts * delay.inMilliseconds}ms — '
       'FCM getToken may fail until the user grants notification permission.',
-      tag: 'FcmMessagingHelper',
+      tag: 'FcmTokenService',
     );
   }
 

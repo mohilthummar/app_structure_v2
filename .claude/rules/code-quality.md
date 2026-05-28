@@ -13,6 +13,20 @@ alwaysApply: true
 - WHY comments, never WHAT. If code needs a "what" comment, rename instead.
 - API docs at module boundaries only, not every internal function.
 
+## No duplicate implementations (one job, one home)
+
+If a file, class, function, or widget already does the work, **reuse or extend it — never create a second thing that does the same job.** Two implementations of one concept always drift apart and one silently goes stale (we shipped a static `Validators` class AND a `ValidationMixin` with subtly different password rules; validation now lives only in `core/mixins/validation_mixin.dart`).
+
+- Before adding anything, search the tree for an existing equivalent (`grep` the symbol / concept). Found one? Extend it — add a parameter or method, don't fork a near-copy.
+- Each concept has exactly one canonical home:
+  - Form validators → `core/mixins/validation_mixin.dart` (mix into the controller). There is **no** static `Validators` class.
+  - Design tokens → `core/theme/` (colors, spacing/radius, typography). Never inline a literal.
+  - User-visible strings → `core/i18n/`.
+  - Platform-capability wrappers (pickers, FCM, downloads, permissions) → `core/services/`.
+  - Pure string / number / date helpers → `core/utils/`.
+- Deleting the old copy is part of the change — a "temporary" second implementation is still a duplicate.
+- If two existing things already overlap, consolidate them into one and remove the loser; don't add a third.
+
 ## Commenting
 
 The skeleton has a single consistent comment style. Follow it on every file you touch.
@@ -90,7 +104,7 @@ try { await Firebase.initializeApp(); } on Object catch (e) { ... }
 - Files and directories: `snake_case.dart` (`sign_in_view.dart`, `auth_remote_datasource.dart`). One class per file.
 - Classes / enums / typedefs: `PascalCase`. Members / locals / parameters: `lowerCamelCase`. Constants: `lowerCamelCase` too (Dart convention; `constant_identifier_names` is disabled in `analysis_options.yaml`).
 - Suffixes are part of the convention: `*View`, `*Controller`, `*Bindings`, `*RepositoryImpl`, `*RemoteDataSource`, `*Model`, `*Request`, `*Response`. Repository interfaces have no suffix beyond `Repository`. There is no entity layer — `*Model` is the type used across data / domain / presentation.
-- Controller action methods: `on*` (`onSignIn`, `onVerify`, `onResend`). Validators: `*Validator`. Form keys: `*FormKey`. `TextEditingController` fields: `*Controller`.
+- Controller action methods: `on*` (`onSignIn`, `onVerify`, `onResend`). Validators: `*Validator`, all defined in `ValidationMixin` (mix it into the controller — there is no static `Validators` class). Form keys: `*FormKey`. `TextEditingController` fields: `*Controller`.
 - Imports: prefer `package:app_structure/...` over relative imports across folders (enforced by `always_use_package_imports`). Relative is fine **only** within the same screen folder.
 
 ## Code Markers

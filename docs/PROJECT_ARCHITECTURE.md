@@ -94,7 +94,7 @@ lib/
 │   │   ├── app_translations.dart           Extends GetX Translations; loads JSON
 │   │   └── i18n_keys.dart                  Typed constants
 │   ├── mixins/
-│   │   └── validation_mixin.dart
+│   │   └── validation_mixin.dart           ALL form validators (single source — no static Validators class)
 │   ├── network/
 │   │   ├── api_client.dart                 One Dio per app
 │   │   ├── api_response.dart               Transport envelope (data layer only)
@@ -107,10 +107,13 @@ lib/
 │   ├── services/
 │   │   ├── analytics_service.dart          Firebase Analytics wrapper
 │   │   ├── app_info_service.dart           package_info_plus wrapper
-│   │   ├── connectivity_service.dart       One-shot static helper
 │   │   ├── crashlytics_service.dart        Firebase Crashlytics wrapper
 │   │   ├── deep_linking_manager.dart       DeepLinkService — whitelist-validated
 │   │   ├── device_info_service.dart        Device id + FCM token persistence
+│   │   ├── fcm_token_service.dart          Static FCM-token fetch (iOS APNS timing)
+│   │   ├── file_download_service.dart      Dio download + safe path/scheme handling
+│   │   ├── file_picker_service.dart        Static file picker + size/type helpers
+│   │   ├── image_picker_service.dart       Static image picker + ImageSourceSheet
 │   │   ├── notification_services.dart      FCM + local notifications + whitelist
 │   │   └── permission_service.dart         permission_handler wrapper
 │   ├── storage/
@@ -122,10 +125,11 @@ lib/
 │   │   ├── app_text.dart                   AppText widget
 │   │   ├── app_theme.dart                  Brightness-aware ThemeData
 │   │   └── app_typography.dart             Text-style tokens
-│   └── utils/
+│   └── utils/                              Stateless helpers (pickers/FCM live in services/, validators in mixins/)
 │       ├── app_logger.dart                 debug/info/.../error with Crashlytics hook
-│       ├── app_loader.dart, app_snack_bar.dart, image_sheet.dart, ...
-│       └── validators.dart
+│       ├── app_loader.dart, app_snack_bar.dart, app_shimmers.dart, ...
+│       ├── formatters/                      Input formatters (currency, phone, ...)
+│       └── string_utils.dart               prettyType — snake/camelCase → Title Case
 │
 ├── shared/
 │   ├── models/                             Shared DTOs
@@ -209,7 +213,7 @@ The boot seam is `bootstrap.dart`. `main.dart` only wraps `runApp` in `runZonedG
 | Repo interface | `<Feature>Repository` | `AuthRepository`, `HomeRepository` |
 | Function | camelCase | `getDashboard`, `applyLoginResponse` |
 | Controller action | `on<Verb>` | `onLogin`, `onSend`, `onRefresh` |
-| Validator | `<Field>Validator` (in `Validators` class) | `Validators.email` |
+| Validator | `<field>Validator` (in `ValidationMixin`) | `controller.emailValidator` |
 | Form key | `<screen>FormKey` | `loginFormKey` |
 | TextEditingController | `<field>Controller` | `emailController` |
 | Route name | camelCase const | `RouteNames.home`, `RouteNames.profile` |
